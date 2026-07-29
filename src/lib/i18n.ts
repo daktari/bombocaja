@@ -44,6 +44,9 @@ const ES: Record<string, string> = {
   "ed.exportError": "error: no se pudo exportar",
   "ed.defaultName": "Sin nombre",
   "ed.steps": "Pasos",
+  "ed.bars": "compases a exportar",
+  "ed.undoAuto": "deshacer la última mutación de AUTO",
+  "insp.tap": "Toca un sonido para escucharlo.",
 
   "hero.title": "Haz música escribiendo palabras",
   "hero.sub":
@@ -191,6 +194,9 @@ const EN: Record<string, string> = {
   "ed.exportError": "error: could not export",
   "ed.defaultName": "Untitled",
   "ed.steps": "Steps",
+  "ed.bars": "bars to export",
+  "ed.undoAuto": "undo the last AUTO mutation",
+  "insp.tap": "Tap a sound to hear it.",
 
   "hero.title": "Make music by typing words",
   "hero.sub":

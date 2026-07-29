@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Transport from "./Transport";
 import StepGrid from "./StepGrid";
-import CodeEditor from "./CodeEditor";
 import VoicePanel from "./VoicePanel";
+
+const CodeEditor = lazy(() => import("./CodeEditor"));
 import PlayableCode from "./PlayableCode";
 import Rich from "./Rich";
 import { usePlayer } from "../lib/usePlayer";
@@ -188,14 +189,16 @@ export default function LearnView() {
 
             {item.id === "voz" && <VoicePanel />}
 
-            <CodeEditor
-              value={code}
-              onChange={setCode}
-              onPlay={play}
-              onStop={stop}
-              registerFlash={registerFlash}
-              className="w-full h-24 overflow-hidden bg-black/70 border border-acid/25 focus-within:border-acid/60 transition-all"
-            />
+            <Suspense fallback={<div className="w-full h-24 bg-black/70 border border-acid/25" />}>
+              <CodeEditor
+                value={code}
+                onChange={setCode}
+                onPlay={play}
+                onStop={stop}
+                registerFlash={registerFlash}
+                className="w-full h-24 overflow-hidden bg-black/70 border border-acid/25 focus-within:border-acid/60 transition-all"
+              />
+            </Suspense>
 
             <StepGrid lanes={parsed.lanes} step={step} />
 

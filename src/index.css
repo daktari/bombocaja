@@ -62,6 +62,10 @@ body::after {
   .blink {
     animation: none;
   }
+  .cm-hit-flash {
+    box-shadow: none !important;
+    background-color: rgba(200, 255, 0, 0.22) !important;
+  }
 }
 
 /* full viewport height that tracks mobile browser toolbars */

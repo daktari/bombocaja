@@ -1,5 +1,10 @@
 /** Pattern ↔ URL hash, base64url-encoded. No backend needed. */
 
+export interface SharedPattern {
+  code: string;
+  bpm?: number;
+}
+
 export function encodePattern(code: string): string {
   const b64 = btoa(unescape(encodeURIComponent(code)));
   return b64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
@@ -15,12 +20,16 @@ export function decodePattern(encoded: string): string | null {
   }
 }
 
-export function patternUrl(code: string): string {
-  return `${location.origin}${location.pathname}#p=${encodePattern(code)}`;
+export function patternUrl(code: string, bpm?: number): string {
+  const bpmPart = bpm && bpm !== 120 ? `&b=${bpm}` : "";
+  return `${location.origin}${location.pathname}#p=${encodePattern(code)}${bpmPart}`;
 }
 
-/** Code shared in the current URL, if any. */
-export function codeFromHash(): string | null {
-  const match = location.hash.match(/^#p=(.+)$/);
-  return match ? decodePattern(match[1]) : null;
+/** Pattern shared in the current URL, if any (with its tempo). */
+export function sharedFromHash(): SharedPattern | null {
+  const match = location.hash.match(/^#p=([^&]+)(?:&b=(\d+))?/);
+  if (!match) return null;
+  const code = decodePattern(match[1]);
+  if (code === null) return null;
+  return { code, bpm: match[2] ? parseInt(match[2], 10) : undefined };
 }

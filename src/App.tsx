@@ -3,22 +3,22 @@ import TopNav, { type Tab } from "./components/TopNav";
 import EditorView, { DEFAULT_CODE } from "./components/EditorView";
 import LearnView from "./components/LearnView";
 import LibraryView from "./components/LibraryView";
-import { codeFromHash } from "./lib/share";
+import { sharedFromHash } from "./lib/share";
 import { DEFAULT_BPM } from "./lib/audioEngine";
 import { HERO_CODE } from "./lib/gallery";
 
 const VISITED_KEY = "bombocaja.visited";
 
+// A shared pattern in the URL (#p=…) opens directly in the editor, at its tempo.
+const SHARED = typeof location !== "undefined" ? sharedFromHash() : null;
+
 export default function App() {
-  // A shared pattern in the URL (#p=…) opens directly in the editor.
-  const [hero, setHero] = useState(
-    () => !localStorage.getItem(VISITED_KEY) && codeFromHash() === null
-  );
+  const [hero, setHero] = useState(() => !localStorage.getItem(VISITED_KEY) && SHARED === null);
   const [editorCode, setEditorCode] = useState<string>(
-    () => codeFromHash() ?? (localStorage.getItem(VISITED_KEY) ? DEFAULT_CODE : HERO_CODE)
+    () => SHARED?.code ?? (localStorage.getItem(VISITED_KEY) ? DEFAULT_CODE : HERO_CODE)
   );
   const [tab, setTab] = useState<Tab>("editor");
-  const [bpm, setBpm] = useState(DEFAULT_BPM);
+  const [bpm, setBpm] = useState(SHARED?.bpm ?? DEFAULT_BPM);
 
   const heroDone = () => {
     setHero(false);

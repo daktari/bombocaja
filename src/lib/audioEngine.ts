@@ -1,10 +1,12 @@
 import {
+  collectPianoMidis,
   collectSampleKeys,
   degreeToMidi,
   SCALES,
   type LaneDef,
   type Loc,
   type Node,
+  type SynthName,
 } from "./parser";
 import { kitSampleId } from "./sounds";
 import { sampleBank } from "./sampleBank";
@@ -315,10 +317,42 @@ class AudioEngine {
   async preload(lanes: LaneDef[]): Promise<void> {
     const ctx = this.ensureContext();
     const keys = collectSampleKeys(lanes);
+    const pianoMidis = collectPianoMidis(lanes);
     await Promise.all([
       keys.length > 0 ? sampleBank.preload(ctx, keys) : Promise.resolve(),
+      pianoMidis.length > 0 ? sampleBank.preloadPitched(ctx, "piano", pianoMidis) : Promise.resolve(),
       voiceBank.ensureDecoded(ctx),
     ]);
+  }
+
+  /** One-shot audition of a drum/voice sound (Inspector and grid taps). */
+  async previewSound(id: string, variant = 0, kit: string | null = null): Promise<void> {
+    const ctx = this.ensureContext();
+    void ctx.resume();
+    const keys = [`${id}:${variant}`];
+    if (kit) keys.unshift(`${kitSampleId(kit, id)}:${variant}`);
+    if (!id.startsWith("v")) await sampleBank.preload(ctx, keys);
+    const io = this.previewIO(ctx, { kit } as LaneDef);
+    this.triggerHit(io, id, variant, ctx.currentTime + 0.02);
+  }
+
+  /** One-shot audition of a melodic note with a given synth. */
+  async previewNote(synth: SynthName, midi: number): Promise<void> {
+    const ctx = this.ensureContext();
+    void ctx.resume();
+    if (synth === "piano") await sampleBank.preloadPitched(ctx, "piano", [midi]);
+    const io = this.previewIO(ctx, { synth, scale: SCALES.mayor } as LaneDef);
+    this.playNote(io, midi, ctx.currentTime + 0.02, 0.4);
+  }
+
+  private previewIO(ctx: AudioContext, lane: LaneDef): LaneIO {
+    return {
+      ctx,
+      dest: this.master ?? ctx.destination,
+      lane,
+      state: { nextTime: 0, index: 0, acidFreq: null, openHats: [] },
+      flash: null,
+    };
   }
 
   async play(lanes: LaneDef[], onStep: StepListener, onFlash?: FlashListener) {
@@ -622,15 +656,30 @@ class AudioEngine {
   private playNote(io: LaneIO, midi: number, time: number, duration: number) {
     const freq = 440 * Math.pow(2, (midi - 69) / 12);
     const synth = io.lane.synth ?? "piano";
-    if (synth === "piano") this.playPiano(io, freq, time);
+    if (synth === "piano") this.playPiano(io, freq, time, midi);
     else if (synth === "bass") this.playBass(io, freq, time);
     else if (synth === "acid") this.playAcid(io, freq, time, duration);
     else this.playPad(io, freq, time, duration);
   }
 
-  /** Triangle + soft low-pass, plucky decay — "piano" enough for beginners. */
-  private playPiano(io: LaneIO, freq: number, time: number) {
+  /** Real sampled piano (pitched via playback rate); triangle-synth fallback. */
+  private playPiano(io: LaneIO, freq: number, time: number, midi: number) {
     const { ctx, dest } = io;
+
+    const sampled = sampleBank.getPitched("piano", midi);
+    if (sampled) {
+      const source = ctx.createBufferSource();
+      source.buffer = sampled.buffer;
+      source.playbackRate.value = sampled.rate;
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0.55, time);
+      g.gain.setTargetAtTime(0, time + 1.6, 0.25);
+      source.connect(g).connect(dest);
+      source.start(time);
+      source.stop(time + 2.6);
+      return;
+    }
+
     const osc = ctx.createOscillator();
     osc.type = "triangle";
     osc.frequency.value = freq;

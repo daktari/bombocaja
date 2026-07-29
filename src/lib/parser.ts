@@ -424,3 +424,21 @@ export function collectSampleKeys(lanes: LaneDef[]): string[] {
   });
   return [...keys];
 }
+
+/** MIDI notes that piano lanes can play — used to preload pitched samples. */
+export function collectPianoMidis(lanes: LaneDef[]): number[] {
+  const midis = new Set<number>();
+  const walk = (node: Node, lane: LaneDef) => {
+    if (node.kind === "note" && lane.synth === "piano") midis.add(node.midi);
+    else if (node.kind === "degree" && lane.synth === "piano") {
+      midis.add(degreeToMidi(node.n, lane.scale));
+    } else if (node.kind === "group") node.children.forEach((c) => walk(c, lane));
+    else if (node.kind === "alt") node.choices.forEach((c) => walk(c, lane));
+    else if (node.kind === "prob") walk(node.child, lane);
+  };
+  lanes.forEach((lane) => {
+    lane.steps.forEach((n) => walk(n, lane));
+    lane.everySteps?.forEach((n) => walk(n, lane));
+  });
+  return [...midis];
+}
