@@ -11,6 +11,12 @@ export interface PlayerOptions {
 }
 
 /**
+ * Only one player sounds at a time (the engine is a singleton) — when a new
+ * one starts, the previous owner's UI gets reset through this hand-off.
+ */
+let takeover: (() => void) | null = null;
+
+/**
  * Shared play/stop state for any view with a code box.
  * Edits while playing are picked up live on the next step.
  */
@@ -55,6 +61,11 @@ export function usePlayer(code: string, options: PlayerOptions = {}) {
   }, []);
 
   const play = () => {
+    takeover?.();
+    takeover = () => {
+      setPlaying(false);
+      setStep(-1);
+    };
     void audioEngine.play(parsed.lanes, setStep, (from, to) => onFlashRef.current?.(from, to));
     setPlaying(true);
   };
@@ -63,6 +74,7 @@ export function usePlayer(code: string, options: PlayerOptions = {}) {
     audioEngine.stop();
     setPlaying(false);
     setStep(-1);
+    takeover = null;
   };
 
   return { playing, step, parsed, play, stop };

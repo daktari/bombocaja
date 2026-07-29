@@ -124,6 +124,7 @@ const ES: LessonText[] = [
       "Dos trucos para que el ritmo no suene siempre igual:",
       "`<bd cp>` — alterna: una vuelta suena bd, la siguiente cp, y vuelta a empezar.",
       "`hh?` — el interrogante hace que suene solo a veces. Cada vuelta decide al azar. 🎲",
+      { code: "<bd cp> hh <sn [sn sn]> hh?" },
     ],
     example: "bd hh sn hh",
     task: "Cambia el primer `hh` por `<hh ho>`, o ponle `?` al último.",
@@ -137,7 +138,8 @@ const ES: LessonText[] = [
       "Este es el truco favorito de todo el mundo. Escribe:",
       { code: "bd(3,8)" },
       "y significa: reparte 3 golpes en 8 pasos, lo más equilibrado posible. El resultado es un ritmo que suena bien… siempre. Es matemática antigua: así funcionan ritmos de Cuba, África y los Balcanes.",
-      "Prueba `(5,8)`, `(3,16)`, `(7,16)`…",
+      "Prueba `(5,8)`, `(3,16)`, `(7,16)`… o dos líneas mágicas a la vez:",
+      { code: "bd(3,8)\ncb(5,16)" },
     ],
     example: "bd(3,8)",
     task: "Cambia los números, o añade otra línea mágica: `cb(2,8)`.",
@@ -320,6 +322,7 @@ const EN: LessonText[] = [
       "Two tricks so your beat never sounds the same twice:",
       "`<bd cp>` — alternates: one loop plays bd, the next cp, then back again.",
       "`hh?` — the question mark makes it play only sometimes. Every loop rolls the dice. 🎲",
+      { code: "<bd cp> hh <sn [sn sn]> hh?" },
     ],
     example: "bd hh sn hh",
     task: "Change the first `hh` into `<hh ho>`, or put a `?` on the last one.",
@@ -333,7 +336,8 @@ const EN: LessonText[] = [
       "This is everyone's favorite trick. Write:",
       { code: "bd(3,8)" },
       "and it means: spread 3 hits over 8 steps, as evenly as possible. The result is a rhythm that sounds good… always. It's ancient math: rhythms from Cuba, Africa and the Balkans work this way.",
-      "Try `(5,8)`, `(3,16)`, `(7,16)`…",
+      "Try `(5,8)`, `(3,16)`, `(7,16)`… or two magic lines at once:",
+      { code: "bd(3,8)\ncb(5,16)" },
     ],
     example: "bd(3,8)",
     task: "Change the numbers, or add another magic line: `cb(2,8)`.",
@@ -442,4 +446,212 @@ const EN: LessonText[] = [
 export function getLessons(): Lesson[] {
   const texts = getLang() === "en" ? EN : ES;
   return texts.map((text) => ({ ...text, check: CHECKS[text.id] }));
+}
+
+// ------------------------------------------------- recipes & deep dives
+
+export type ExtraKind = "receta" | "fondo";
+
+/** Goal-oriented mini-guides ("recetas") and optional deep dives ("a fondo").
+ *  No challenge, no progress — reference material with playable examples. */
+export interface Extra {
+  id: string;
+  kind: ExtraKind;
+  title: string;
+  intro: IntroBlock[];
+  example: string;
+}
+
+const EXTRAS_ES: Extra[] = [
+  {
+    id: "receta-redoble",
+    kind: "receta",
+    title: "¿Cómo hago un redoble?",
+    intro: [
+      "Un redoble es meter varios golpes en el espacio de uno. De suave a intenso:",
+      { code: "bd ~ [sn sn] ~" },
+      { code: "bd ~ sn*3 ~" },
+      "Y el redoble de hats del trap — mezclar velocidades dentro de la misma línea:",
+      { code: "hh hh [hh hh] hh [hh hh hh] hh hh" },
+    ],
+    example: "bd ~ [sn sn] ~\nhh hh hh [hh hh hh]",
+  },
+  {
+    id: "receta-variacion",
+    kind: "receta",
+    title: "¿Cómo evito que suene siempre igual?",
+    intro: [
+      "Tres herramientas, de la más predecible a la más caótica.",
+      "`<a b>` alterna en cada vuelta — cambio regular, hipnótico:",
+      { code: "<bd cp> ~ sn ~" },
+      "`?` tira un dado en cada vuelta — caos controlado:",
+      { code: "bd ~ sn ~\nhh hh? hh hh?" },
+      "`every` guarda un giro para cada N vueltas — sorpresa programada:",
+      { code: "bd ~ sn cp | every 4 rev" },
+    ],
+    example: "<bd cp> ~ sn ~ | every 4 rev\nhh hh? hh hh?",
+  },
+  {
+    id: "receta-pro",
+    kind: "receta",
+    title: "¿Cómo sueno más pro?",
+    intro: [
+      "Tres reglas de mezcla que usan todos los productores:",
+      "1 · El bombo manda: dale `gain 0.9` y pon todo lo demás por debajo — si todo grita, nada se oye.",
+      "2 · Reparte el espacio: `pan` negativo a la izquierda, positivo a la derecha.",
+      "3 · La `reverb` va en palmadas y cajas. En el bombo, nunca — lo vuelve barro.",
+      { code: "bd bd bd bd | kit 909 | gain 0.9\n~ cp ~ cp | kit 909 | reverb 0.35 | gain 0.5\nhh hh hh hh | fast 2 | gain 0.3 | pan -0.3\ncb(2,8) | gain 0.3 | pan 0.4" },
+    ],
+    example: "bd bd bd bd | kit 909 | gain 0.9\n~ cp ~ cp | kit 909 | reverb 0.35 | gain 0.5\nhh hh hh hh | fast 2 | gain 0.3 | pan -0.3",
+  },
+  {
+    id: "receta-melodia",
+    kind: "receta",
+    title: "¿Cómo hago melodías que no desafinen?",
+    intro: [
+      "Usa peldaños (números) con una escala: la escalera ya está afinada, es imposible fallar.",
+      { code: "0 2 4 7 | synth piano | scale menor" },
+      "Para un bajo con intención: insiste en la raíz (`0`) y visita vecinos de vez en cuando.",
+      { code: "0 0 3 5 | synth bass | scale menor" },
+      "Y para flotar sin rumbo fijo, la escala `penta` — todo pega con todo:",
+      { code: "<0 4> <2 7> <4 9> <2 5> | synth pad | scale penta | slow 2 | reverb 0.5" },
+    ],
+    example: "0 0 3 5 | synth bass | scale menor\nbd ~ sn ~",
+  },
+  {
+    id: "receta-acordes",
+    kind: "receta",
+    title: "¿Cómo hago acordes?",
+    intro: [
+      "Cada línea toca una nota a la vez… pero nada impide que dos líneas suenen juntas. Dos pads en paralelo = un acorde:",
+      { code: "<0 5> ~ ~ ~ | synth pad | scale menor | slow 2 | reverb 0.5\n<2 7> ~ ~ ~ | synth pad | scale menor | slow 2 | reverb 0.5 | gain 0.7" },
+      "La primera línea pone la base, la segunda la armonía dos peldaños más arriba. Cambia los pares — `<0 3>`, `<2 5>` — y el acorde viaja. Así se hacen los strings del techno de Detroit.",
+    ],
+    example: "<0 5> ~ ~ ~ | synth pad | scale menor | slow 2 | reverb 0.5\n<2 7> ~ ~ ~ | synth pad | scale menor | slow 2 | reverb 0.5 | gain 0.7\nbd bd bd bd | kit 909 | gain 0.8",
+  },
+  {
+    id: "fondo-persiguen",
+    kind: "fondo",
+    title: "¿Por qué las líneas se persiguen?",
+    intro: [
+      "Escucha esto un rato largo: una línea de 3 pasos contra una de 4.",
+      { code: "bd ~ cb\nhh hh hh hh" },
+      "La línea de 4 da la vuelta cada 4 pasos. La de 3, cada 3. Solo vuelven a coincidir cada 12 pasos — y hasta entonces, el cencerro cae cada vez en un sitio distinto respecto a los hats.",
+      "Esto se llama polimetría, y aquí es gratis: basta escribir líneas de largos distintos. 3 contra 4, 5 contra 8, 7 contra 16… cuanto más raros los números, más tarda el dibujo en repetirse.",
+      { code: "bd ~ ~ ~ ~\ncb ~ ~ ~ ~ ~ ~\nhh hh hh hh" },
+    ],
+    example: "bd ~ cb\nhh hh hh hh",
+  },
+  {
+    id: "fondo-escalas",
+    kind: "fondo",
+    title: "¿Qué es una escala de verdad?",
+    intro: [
+      "Entre una nota y su doble aguda (`c` → `c5`) hay 12 escalones iguales: los semitonos. Una escala es elegir 7 de esos 12 y prometerte usar solo esos.",
+      "`mayor` elige los que suenan luminosos. `menor` cambia tres escalones y todo se vuelve melancólico. Mismos peldaños, distinta escalera — compara:",
+      { code: "0 2 4 7 | synth piano | scale mayor" },
+      { code: "0 2 4 7 | synth piano | scale menor" },
+      "Por eso los números nunca desafinan: tú eliges el peldaño, la escalera ya viene afinada. Las notas con letra (`c e g`) son el modo experto: ahí eliges el semitono exacto, con libertad para acertar… y para fallar.",
+    ],
+    example: "0 2 4 7 | synth piano | scale menor\nbd ~ sn ~ | gain 0.7",
+  },
+];
+
+const EXTRAS_EN: Extra[] = [
+  {
+    id: "receta-redoble",
+    kind: "receta",
+    title: "How do I make a roll?",
+    intro: [
+      "A roll packs several hits into the space of one. From soft to intense:",
+      { code: "bd ~ [sn sn] ~" },
+      { code: "bd ~ sn*3 ~" },
+      "And the trap hat roll — mixing speeds inside one line:",
+      { code: "hh hh [hh hh] hh [hh hh hh] hh hh" },
+    ],
+    example: "bd ~ [sn sn] ~\nhh hh hh [hh hh hh]",
+  },
+  {
+    id: "receta-variacion",
+    kind: "receta",
+    title: "How do I keep it from sounding the same?",
+    intro: [
+      "Three tools, from most predictable to most chaotic.",
+      "`<a b>` alternates every loop — regular, hypnotic change:",
+      { code: "<bd cp> ~ sn ~" },
+      "`?` rolls a die every loop — controlled chaos:",
+      { code: "bd ~ sn ~\nhh hh? hh hh?" },
+      "`every` saves a twist for every Nth loop — scheduled surprise:",
+      { code: "bd ~ sn cp | every 4 rev" },
+    ],
+    example: "<bd cp> ~ sn ~ | every 4 rev\nhh hh? hh hh?",
+  },
+  {
+    id: "receta-pro",
+    kind: "receta",
+    title: "How do I sound more pro?",
+    intro: [
+      "Three mixing rules every producer uses:",
+      "1 · The kick rules: give it `gain 0.9` and keep everything else below — when everything shouts, nothing is heard.",
+      "2 · Share the space: negative `pan` goes left, positive right.",
+      "3 · `reverb` belongs on claps and snares. Never on the kick — it turns to mud.",
+      { code: "bd bd bd bd | kit 909 | gain 0.9\n~ cp ~ cp | kit 909 | reverb 0.35 | gain 0.5\nhh hh hh hh | fast 2 | gain 0.3 | pan -0.3\ncb(2,8) | gain 0.3 | pan 0.4" },
+    ],
+    example: "bd bd bd bd | kit 909 | gain 0.9\n~ cp ~ cp | kit 909 | reverb 0.35 | gain 0.5\nhh hh hh hh | fast 2 | gain 0.3 | pan -0.3",
+  },
+  {
+    id: "receta-melodia",
+    kind: "receta",
+    title: "How do I write melodies that stay in tune?",
+    intro: [
+      "Use degrees (numbers) with a scale: the ladder comes pre-tuned, you can't miss.",
+      { code: "0 2 4 7 | synth piano | scale menor" },
+      "For a bassline with intent: insist on the root (`0`) and visit neighbors now and then.",
+      { code: "0 0 3 5 | synth bass | scale menor" },
+      "And to float freely, the `penta` scale — everything fits with everything:",
+      { code: "<0 4> <2 7> <4 9> <2 5> | synth pad | scale penta | slow 2 | reverb 0.5" },
+    ],
+    example: "0 0 3 5 | synth bass | scale menor\nbd ~ sn ~",
+  },
+  {
+    id: "receta-acordes",
+    kind: "receta",
+    title: "How do I make chords?",
+    intro: [
+      "Each line plays one note at a time… but nothing stops two lines from sounding together. Two parallel pads = a chord:",
+      { code: "<0 5> ~ ~ ~ | synth pad | scale menor | slow 2 | reverb 0.5\n<2 7> ~ ~ ~ | synth pad | scale menor | slow 2 | reverb 0.5 | gain 0.7" },
+      "The first line lays the base, the second the harmony two degrees up. Change the pairs — `<0 3>`, `<2 5>` — and the chord travels. That's how Detroit techno strings are made.",
+    ],
+    example: "<0 5> ~ ~ ~ | synth pad | scale menor | slow 2 | reverb 0.5\n<2 7> ~ ~ ~ | synth pad | scale menor | slow 2 | reverb 0.5 | gain 0.7\nbd bd bd bd | kit 909 | gain 0.8",
+  },
+  {
+    id: "fondo-persiguen",
+    kind: "fondo",
+    title: "Why do lines chase each other?",
+    intro: [
+      "Listen to this for a good while: a 3-step line against a 4-step one.",
+      { code: "bd ~ cb\nhh hh hh hh" },
+      "The 4-step line loops every 4 steps. The 3-step one, every 3. They only meet again every 12 steps — until then, the cowbell lands somewhere different against the hats every time.",
+      "This is called polymeter, and here it's free: just write lines of different lengths. 3 against 4, 5 against 8, 7 against 16… the stranger the numbers, the longer the pattern takes to repeat.",
+      { code: "bd ~ ~ ~ ~\ncb ~ ~ ~ ~ ~ ~\nhh hh hh hh" },
+    ],
+    example: "bd ~ cb\nhh hh hh hh",
+  },
+  {
+    id: "fondo-escalas",
+    kind: "fondo",
+    title: "What is a scale, really?",
+    intro: [
+      "Between a note and its higher double (`c` → `c5`) there are 12 equal steps: semitones. A scale means choosing 7 of those 12 and promising to use only those.",
+      "`mayor` picks the bright-sounding ones. `menor` shifts three steps and everything turns melancholic. Same degrees, different ladder — compare:",
+      { code: "0 2 4 7 | synth piano | scale mayor" },
+      { code: "0 2 4 7 | synth piano | scale menor" },
+      "That's why numbers never go out of tune: you pick the step, the ladder comes tuned. Letter notes (`c e g`) are expert mode: you pick the exact semitone — free to nail it… and to miss.",
+    ],
+    example: "0 2 4 7 | synth piano | scale menor\nbd ~ sn ~ | gain 0.7",
+  },
+];
+
+export function getExtras(): Extra[] {
+  return getLang() === "en" ? EXTRAS_EN : EXTRAS_ES;
 }
