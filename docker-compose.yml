@@ -1,0 +1,22 @@
+services:
+  app:
+    build:
+      context: .
+      target: dev
+    ports:
+      - "5173:5173"
+    volumes:
+      - .:/app
+      # keep container-installed deps; don't let the (empty) host folder shadow them
+      - /app/node_modules
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+
+  # production preview: docker compose --profile prod up --build prod
+  prod:
+    build:
+      context: .
+      target: prod
+    ports:
+      - "8880:80"
+    profiles: ["prod"]
