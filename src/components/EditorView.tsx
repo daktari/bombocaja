@@ -16,6 +16,13 @@ import { t } from "../lib/i18n";
 
 export const DEFAULT_CODE = "-- drums\nbd ~ sn ~\n\n-- hats\nhh hh ho hh";
 
+/** Self-typing sequence for promo recordings — open the app with #demo. */
+const DEMO_CODE = `-- bombocaja
+bd ~ sn ~ | kit 808
+hh hh ho hh | gain 0.5
+~ ~ cp ~ | kit 808 | reverb 0.4
+0 0 3 5 | synth acid | scale menor`;
+
 interface Props {
   code: string;
   onCodeChange: (code: string) => void;
@@ -41,6 +48,15 @@ export default function EditorView({ code, onCodeChange, bpm, onBpmChange, hero,
   const [autoTrail, setAutoTrail] = useState<string[]>([]);
   const [exportBars, setExportBars] = useState(4);
   const lastMutation = useRef(-1);
+
+  const [demoArmed, setDemoArmed] = useState(
+    () => typeof location !== "undefined" && location.hash === "#demo"
+  );
+  const demoTimers = useRef<number[]>([]);
+  useEffect(() => {
+    const timers = demoTimers.current;
+    return () => timers.forEach((t) => window.clearTimeout(t));
+  }, []);
 
   const flashFn = useRef<((from: number, to: number) => void) | null>(null);
   const registerFlash = useCallback((fn: (from: number, to: number) => void) => {
@@ -155,8 +171,46 @@ export default function EditorView({ code, onCodeChange, bpm, onBpmChange, hero,
     play();
   };
 
+  /** Types the demo pattern character by character while it plays. */
+  const startDemo = () => {
+    setDemoArmed(false);
+    onHeroDone?.();
+    onCodeChange("");
+    const firstLineEnd = DEMO_CODE.indexOf("\n", DEMO_CODE.indexOf("bd"));
+    let delay = 900;
+    for (let i = 1; i <= DEMO_CODE.length; i++) {
+      delay += DEMO_CODE[i - 1] === "\n" ? 900 : 65;
+      const slice = DEMO_CODE.slice(0, i);
+      const shouldPlay = i === firstLineEnd;
+      demoTimers.current.push(
+        window.setTimeout(() => {
+          onCodeChange(slice);
+          if (shouldPlay) play();
+        }, delay)
+      );
+    }
+  };
+
   return (
     <div className="flex flex-1 min-h-0 relative">
+      {demoArmed && (
+        <div className="absolute inset-0 z-40 bg-ink/95 backdrop-blur-sm flex items-center justify-center">
+          <div className="text-center space-y-5 max-w-md px-6">
+            <div className="text-[10px] uppercase tracking-[0.3em] text-mag">modo demo</div>
+            <p className="text-xs text-fog leading-relaxed">
+              1 · Empieza a grabar la pestaña (rec.html o Cmd+Shift+5)
+              <br />2 · Pulsa el botón — la app teclea y toca sola (~35s)
+            </p>
+            <button
+              onClick={startDemo}
+              className="px-10 py-3 text-lg font-bold uppercase tracking-widest text-black bg-acid shadow-[5px_5px_0_#ff3ea5] hover:shadow-[2px_2px_0_#ff3ea5] hover:translate-x-[3px] hover:translate-y-[3px] transition-all"
+            >
+              ▶ Empezar
+            </button>
+          </div>
+        </div>
+      )}
+
       {hero && (
         <div className="absolute inset-0 z-30 bg-ink/90 backdrop-blur-sm flex items-center justify-center">
           <div className="text-center space-y-6 max-w-md px-6">
