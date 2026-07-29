@@ -1,0 +1,120 @@
+{
+ "_base": "/samples/",
+ "bd": [
+  "bd.wav"
+ ],
+ "sn": [
+  "sn.wav"
+ ],
+ "hh": [
+  "hh.wav"
+ ],
+ "ho": [
+  "ho.wav"
+ ],
+ "cp": [
+  "cp.wav"
+ ],
+ "rm": [
+  "rm.wav"
+ ],
+ "cb": [
+  "cb.wav"
+ ],
+ "lt": [
+  "lt.wav"
+ ],
+ "mt": [
+  "mt.wav"
+ ],
+ "ht": [
+  "ht.wav"
+ ],
+ "RolandTR808_bd": [
+  "RolandTR808_bd.wav"
+ ],
+ "RolandTR808_sd": [
+  "RolandTR808_sd.wav"
+ ],
+ "RolandTR808_hh": [
+  "RolandTR808_hh.wav"
+ ],
+ "RolandTR808_oh": [
+  "RolandTR808_oh.wav"
+ ],
+ "RolandTR808_cp": [
+  "RolandTR808_cp.wav"
+ ],
+ "RolandTR808_rim": [
+  "RolandTR808_rim.wav"
+ ],
+ "RolandTR808_cb": [
+  "RolandTR808_cb.wav"
+ ],
+ "RolandTR808_lt": [
+  "RolandTR808_lt.wav"
+ ],
+ "RolandTR808_mt": [
+  "RolandTR808_mt.wav"
+ ],
+ "RolandTR808_ht": [
+  "RolandTR808_ht.wav"
+ ],
+ "RolandTR909_bd": [
+  "RolandTR909_bd.wav"
+ ],
+ "RolandTR909_sd": [
+  "RolandTR909_sd.wav"
+ ],
+ "RolandTR909_hh": [
+  "RolandTR909_hh.wav"
+ ],
+ "RolandTR909_oh": [
+  "RolandTR909_oh.wav"
+ ],
+ "RolandTR909_cp": [
+  "RolandTR909_cp.wav"
+ ],
+ "RolandTR909_rim": [
+  "RolandTR909_rim.wav"
+ ],
+ "RolandTR909_lt": [
+  "RolandTR909_lt.wav"
+ ],
+ "RolandTR909_mt": [
+  "RolandTR909_mt.wav"
+ ],
+ "RolandTR909_ht": [
+  "RolandTR909_ht.wav"
+ ],
+ "LinnDrum_bd": [
+  "LinnDrum_bd.wav"
+ ],
+ "LinnDrum_sd": [
+  "LinnDrum_sd.wav"
+ ],
+ "LinnDrum_hh": [
+  "LinnDrum_hh.wav"
+ ],
+ "LinnDrum_oh": [
+  "LinnDrum_oh.wav"
+ ],
+ "LinnDrum_cp": [
+  "LinnDrum_cp.wav"
+ ],
+ "LinnDrum_rim": [
+  "LinnDrum_rim.wav"
+ ],
+ "LinnDrum_cb": [
+  "LinnDrum_cb.wav"
+ ],
+ "LinnDrum_lt": [
+  "LinnDrum_lt.wav"
+ ],
+ "LinnDrum_mt": [
+  "LinnDrum_mt.wav"
+ ],
+ "LinnDrum_ht": [
+  "LinnDrum_ht.wav"
+ ]
+}
