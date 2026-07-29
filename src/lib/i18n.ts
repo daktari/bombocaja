@@ -54,6 +54,11 @@ const ES: Record<string, string> = {
   "sidebar.hint": "Haz clic en uno para cargarlo en el editor.",
 
   "ln.lessons": "Lecciones",
+  "ln.course": "Curso",
+  "ln.recipes": "Recetas",
+  "ln.deep": "A fondo",
+  "ln.recipe": "Receta",
+  "ln.deepLabel": "A fondo",
   "ln.lesson": "Lección",
   "ln.done": "· completada ✓",
   "ln.try": "Pruébalo tú",
@@ -196,6 +201,11 @@ const EN: Record<string, string> = {
   "sidebar.hint": "Click one to load it into the editor.",
 
   "ln.lessons": "Lessons",
+  "ln.course": "Course",
+  "ln.recipes": "Recipes",
+  "ln.deep": "Deep dives",
+  "ln.recipe": "Recipe",
+  "ln.deepLabel": "Deep dive",
   "ln.lesson": "Lesson",
   "ln.done": "· completed ✓",
   "ln.try": "Try it yourself",
