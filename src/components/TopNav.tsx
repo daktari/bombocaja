@@ -24,8 +24,8 @@ export default function TopNav({ tab, onChange }: { tab: Tab; onChange: (t: Tab)
     <header className="flex items-center gap-6 px-5 h-12 border-b border-acid/25 bg-panel shrink-0">
       <div className="text-sm tracking-widest select-none uppercase">
         <span className="text-fog">[</span>
-        <span className="text-acid">bombo</span>
-        <span className="text-mag">caja</span>
+        <span className="text-acid">baka</span>
+        <span className="text-mag">luti</span>
         <span className="text-fog"> v1.0]</span>
         <span className="text-acid blink">▮</span>
       </div>
@@ -74,8 +74,8 @@ export default function TopNav({ tab, onChange }: { tab: Tab; onChange: (t: Tab)
           >
             <div className="text-sm tracking-widest select-none uppercase">
               <span className="text-fog">[</span>
-              <span className="text-acid">bombo</span>
-              <span className="text-mag">caja</span>
+              <span className="text-acid">baka</span>
+              <span className="text-mag">luti</span>
               <span className="text-fog">]</span>
             </div>
             <p className="text-xs text-slate-300 leading-relaxed">

@@ -20,8 +20,8 @@ export default class ErrorBoundary extends Component<{ children: ReactNode }, St
         <div className="text-center space-y-5 max-w-sm px-6">
           <div className="text-lg tracking-widest select-none uppercase">
             <span className="text-fog">[</span>
-            <span className="text-acid">bombo</span>
-            <span className="text-mag">caja</span>
+            <span className="text-acid">baka</span>
+            <span className="text-mag">luti</span>
             <span className="text-fog">]</span>
           </div>
           <h1 className="text-xl text-slate-100 uppercase tracking-wide">{t("err.title")}</h1>

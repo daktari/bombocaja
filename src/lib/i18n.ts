@@ -151,7 +151,7 @@ const ES: Record<string, string> = {
   "insp.swing": "arrastra el groove (0–1)",
   "insp.drive": "distorsión (0–1)",
 
-  "about.button": "acerca de bombocaja",
+  "about.button": "acerca de bakaluti",
   "about.sounds":
     "Los sonidos vienen de `Dirt-Samples` y `tidal-drum-machines`, las librerías comunitarias del ecosistema TidalCycles. Gracias.",
   "about.inspired":
@@ -295,7 +295,7 @@ const EN: Record<string, string> = {
   "insp.swing": "drags the groove (0–1)",
   "insp.drive": "distortion (0–1)",
 
-  "about.button": "about bombocaja",
+  "about.button": "about bakaluti",
   "about.sounds":
     "Sounds come from `Dirt-Samples` and `tidal-drum-machines`, the community libraries of the TidalCycles ecosystem. Thank you.",
   "about.inspired":

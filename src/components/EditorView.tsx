@@ -136,7 +136,7 @@ export default function EditorView({ code, onCodeChange, bpm, onBpmChange }: Pro
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = "bombocaja.wav";
+      a.download = "bakaluti.wav";
       a.click();
       URL.revokeObjectURL(url);
       flash(t("ed.exported"));

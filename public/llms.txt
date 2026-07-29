@@ -1,0 +1,106 @@
+# bakaluti — language specification for LLMs
+
+bakaluti (https://bakaluti.com) is a browser live-coding music playground for
+absolute beginners. Patterns are plain text. This file is the COMPLETE
+specification of its pattern language — everything not described here does
+not exist in the language. The syntax is a radically simplified dialect of
+the TidalCycles/Strudel mini-notation (sequencing symbols are compatible),
+but there are NO functions, NO method chaining, NO JavaScript.
+
+## Core model
+
+- Each non-empty line is one LANE (layer). All lanes play simultaneously, looping.
+- Tokens are separated by spaces. Each top-level token lasts one step
+  (an eighth note; 250 ms at the default 120 BPM).
+- Lanes may have different lengths; each loops independently (polymeter).
+- Everything after `--` on a line is a comment (inline or full-line).
+- Invalid tokens produce a friendly warning and are skipped; playback never crashes.
+
+## Drum sounds (the only sound tokens)
+
+bd (kick) · sn (snare) · hh (closed hat) · ho (open hat) · cp (clap) ·
+rm (rimshot) · cb (cowbell) · lt/mt/ht (low/mid/high tom) · ~ (rest/silence)
+
+- Strudel aliases accepted: sd = sn, oh = ho, rim = rm.
+- Variants: `bd:3` = 3rd sample of that sound (kick has 24, snare 52; wraps around).
+- A closed hat chokes a ringing open hat on the same lane (like real kits).
+
+## Recorded voice
+
+v1 … v8 — user-recorded microphone slots (recorded in the app's VOZ row).
+They behave exactly like drum sounds: `v1 ~ [v1 v1] v2?`, `v3(3,8)`, effects, etc.
+Silent if the slot is empty. No variants (no `v1:2`).
+
+## Melody
+
+- Note names: `c d e f g a b`, optional sharp `#`, optional octave digit 1-8
+  (default octave 4). Examples: `c` (= C4, midi 60), `c#`, `e5`, `b3`.
+- Scale degrees: integers `-99..99` mapped onto a scale rooted at C4.
+  `0 2 4 7` in scale mayor = C E G C5. Degrees can't play out of tune.
+- Scales (via `| scale X`): mayor (default), menor, penta.
+  English aliases: major, minor, pentatonic.
+- Instruments (via `| synth X`): piano (sampled), bass, pad, acid (TB-303 style,
+  plays one octave down with glide between consecutive notes). Default: piano.
+
+## Mini-notation (composable and nestable, same symbols as Tidal/Strudel)
+
+[a b]    subdivision: both sounds inside one step
+a*2      repetition sugar, same as [a a] (max *16)
+<a b>    alternation: picks the next choice each time the lane loops
+a?       50% probability each time
+a(k,n)   euclidean rhythm: k hits spread evenly over n steps (expands in
+         place to n steps; k<=n<=32). E.g. bd(3,8) = x..x..x.
+a:v      sample variant (drums only)
+
+Combinable: `[bd hh]*2`, `<sn cp>?`, `v1(3,8)`, `[c e] <g b3>?`
+
+## Line commands (appended after `|`, chainable: `bd ~ | kit 808 | gain 0.8`)
+
+| fast N       lane plays N× faster (integer 1-8; stacks)
+| slow N       lane plays N× slower (integer 1-8)
+| rev          reverses the lane's top-level steps
+| every N rev  every Nth loop the lane plays reversed (N 2-16)
+| swing X      delays even-numbered steps for groove (0-1)
+| lpf F        low-pass filter cutoff in Hz (100-12000)
+| delay X      musical echo send, dotted-eighth time (0-1)
+| reverb X     reverb send (0-1). Alias: room X
+| drive X      soft-clip distortion (0-1)
+| pan X        stereo position (-1 left … 1 right)
+| gain X       lane volume (0-2)
+| synth NAME   piano | bass | pad | acid   (melodic lanes)
+| scale NAME   mayor | menor | penta        (degree lanes)
+| kit NAME     drum machine: 808 (Roland TR-808), 909 (TR-909), linn (LinnDrum).
+               Remaps bd/sn/hh/etc to that machine's real samples.
+               Strudel-style alias: | bank RolandTR808 / RolandTR909 / LinnDrum
+
+There are NO other commands. No note lengths, no chords-in-one-token
+(make chords by layering two melodic lanes), no nested every, no numbers on rev.
+
+## Global controls (UI, not language)
+
+Tempo 60-180 BPM (slider). Master volume + per-lane volume sliders.
+AUTO mode mutates unlocked lanes every 4 loops. WAV export (2/4/8 bars).
+
+## Sharing format
+
+https://bakaluti.com/#p=<base64url(utf8 pattern)>&b=<bpm>
+(&b omitted when bpm is 120)
+
+## Style guidance for generating good patterns
+
+- Gain-stage: kick ~0.9, snare/clap 0.5-0.7, hats 0.25-0.45, bass 0.65-0.85.
+- Reverb on claps/snares, never on the kick. Pan hats/percussion sideways.
+- Use <>, ? or every to make loops evolve.
+- Lanes of different lengths create polymeter (e.g. a 3-step against a 4-step).
+- Chords: two pad lanes in parallel degrees, e.g.
+  `<0 5> ~ ~ ~ | synth pad | slow 2` + `<2 7> ~ ~ ~ | synth pad | slow 2 | gain 0.7`
+
+## Complete example
+
+-- detroit-style techno, ~124 BPM
+bd bd bd bd | kit 909 | gain 0.9            -- kick
+~ cp ~ cp | kit 909 | reverb 0.3 | gain 0.5 -- clap on 2 and 4
+~ ho ~ ho | kit 909 | gain 0.4              -- offbeat open hat
+0 ~ [~ 0] ~ 3 ~ [~ 5] ~ | synth bass | scale menor | swing 0.15 | gain 0.7
+<0 5> ~ ~ ~ | synth pad | scale menor | slow 2 | reverb 0.55 | gain 0.55
+<2 7> ~ ~ ~ | synth pad | scale menor | slow 2 | reverb 0.55 | gain 0.4

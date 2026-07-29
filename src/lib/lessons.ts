@@ -1,7 +1,7 @@
 import { getLang } from "./i18n";
 
 /**
- * The bombocaja course. Each lesson introduces exactly one idea, assumes
+ * The bakaluti course. Each lesson introduces exactly one idea, assumes
  * zero musical knowledge, and is "passed" when the check spots the idea
  * being used in the code. Text in `intro`/`task`/`success` may use
  * `backticks` for inline code; { code } entries render as blocks.

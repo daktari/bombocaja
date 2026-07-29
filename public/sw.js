@@ -1,6 +1,6 @@
-/* bombocaja service worker — app shell + sample cache for offline use */
-const SHELL_CACHE = "bombocaja-shell-v1";
-const SAMPLE_CACHE = "bombocaja-samples-v1";
+/* bakaluti service worker — app shell + sample cache for offline use */
+const SHELL_CACHE = "bakaluti-shell-v1";
+const SAMPLE_CACHE = "bakaluti-samples-v1";
 
 self.addEventListener("install", () => {
   self.skipWaiting();
