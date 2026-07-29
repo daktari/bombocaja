@@ -1,0 +1,10 @@
+{
+  // Cloudflare Workers static assets — deployed with `npx wrangler deploy`
+  "name": "bombocaja",
+  "compatibility_date": "2025-01-01",
+  "assets": {
+    "directory": "./dist",
+    // deep links (/#p=… works anyway, but any path falls back to the app)
+    "not_found_handling": "single-page-application"
+  }
+}
