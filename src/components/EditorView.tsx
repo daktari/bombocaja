@@ -1,11 +1,12 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
 import Sidebar from "./Sidebar";
 import Inspector from "./Inspector";
 import Transport from "./Transport";
 import StepGrid from "./StepGrid";
-import CodeEditor from "./CodeEditor";
 import Visualizer from "./Visualizer";
 import VoicePanel from "./VoicePanel";
+
+const CodeEditor = lazy(() => import("./CodeEditor"));
 import { usePlayer } from "../lib/usePlayer";
 import { audioEngine, DEFAULT_BPM } from "../lib/audioEngine";
 import { addPattern } from "../lib/storage";
@@ -37,6 +38,8 @@ export default function EditorView({ code, onCodeChange, bpm, onBpmChange, hero,
   /** AUTO mode: the app mutates unlocked lanes while playing. */
   const [auto, setAuto] = useState(false);
   const [locks, setLocks] = useState<boolean[]>([]);
+  const [autoTrail, setAutoTrail] = useState<string[]>([]);
+  const [exportBars, setExportBars] = useState(4);
   const lastMutation = useRef(-1);
 
   const flashFn = useRef<((from: number, to: number) => void) | null>(null);
@@ -58,6 +61,7 @@ export default function EditorView({ code, onCodeChange, bpm, onBpmChange, hero,
     lastMutation.current = step;
     const mutation = mutateCode(code, locks);
     if (mutation) {
+      setAutoTrail((trail) => [...trail.slice(-19), code]);
       onCodeChange(mutation.code);
       flash(`auto: ${mutation.change}`);
     }
@@ -67,10 +71,19 @@ export default function EditorView({ code, onCodeChange, bpm, onBpmChange, hero,
   const toggleAuto = () => {
     if (auto) {
       setAuto(false);
+      setAutoTrail([]);
     } else {
       setAuto(true);
       if (!playing) play();
     }
+  };
+
+  const undoAuto = () => {
+    setAutoTrail((trail) => {
+      const previous = trail[trail.length - 1];
+      if (previous !== undefined) onCodeChange(previous);
+      return trail.slice(0, -1);
+    });
   };
 
   const toggleLock = (laneIndex: number) => {
@@ -114,7 +127,7 @@ export default function EditorView({ code, onCodeChange, bpm, onBpmChange, hero,
   };
 
   const copyLink = async () => {
-    await navigator.clipboard.writeText(patternUrl(code));
+    await navigator.clipboard.writeText(patternUrl(code, bpm));
     flash(t("ed.copied"));
   };
 
@@ -122,7 +135,7 @@ export default function EditorView({ code, onCodeChange, bpm, onBpmChange, hero,
     if (exporting) return;
     setExporting(true);
     try {
-      const blob = await audioEngine.renderWav(parsed.lanes);
+      const blob = await audioEngine.renderWav(parsed.lanes, exportBars * 8);
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -223,6 +236,16 @@ export default function EditorView({ code, onCodeChange, bpm, onBpmChange, hero,
           >
             {auto ? <span className="blink">⟳ auto</span> : "⟳ auto"}
           </button>
+          {auto && autoTrail.length > 0 && (
+            <button
+              onClick={undoAuto}
+              title={t("ed.undoAuto")}
+              aria-label={t("ed.undoAuto")}
+              className="px-3 py-1.5 text-xs uppercase tracking-widest border border-mag/40 text-mag/80 hover:bg-mag hover:text-black transition-all"
+            >
+              ↺ {autoTrail.length}
+            </button>
+          )}
           <div className="flex items-center gap-2 flex-wrap">
             <button
               onClick={() => setPanel("snippets")}
@@ -271,6 +294,19 @@ export default function EditorView({ code, onCodeChange, bpm, onBpmChange, hero,
             >
               {t("ed.share")}
             </button>
+            <select
+              value={exportBars}
+              onChange={(e) => setExportBars(Number(e.target.value))}
+              aria-label={t("ed.bars")}
+              title={t("ed.bars")}
+              className="px-1 py-1.5 text-xs bg-black border border-white/15 text-fog outline-none"
+            >
+              {[2, 4, 8].map((n) => (
+                <option key={n} value={n}>
+                  {n}c
+                </option>
+              ))}
+            </select>
             <button
               onClick={() => void exportWav()}
               disabled={exporting}
@@ -290,14 +326,22 @@ export default function EditorView({ code, onCodeChange, bpm, onBpmChange, hero,
           </div>
         </div>
 
-        <CodeEditor
-          value={code}
-          onChange={onCodeChange}
-          onPlay={play}
-          onStop={stop}
-          registerFlash={registerFlash}
-          className="relative z-10 flex-1 min-h-0 overflow-hidden bg-black/70 backdrop-blur-sm border border-acid/25 focus-within:border-acid/60 focus-within:shadow-[4px_4px_0_rgba(200,255,0,0.15)] transition-all"
-        />
+        <Suspense
+          fallback={
+            <div className="relative z-10 flex-1 min-h-0 bg-black/70 border border-acid/25 flex items-center justify-center text-xs text-fog">
+              …
+            </div>
+          }
+        >
+          <CodeEditor
+            value={code}
+            onChange={onCodeChange}
+            onPlay={play}
+            onStop={stop}
+            registerFlash={registerFlash}
+            className="relative z-10 flex-1 min-h-0 overflow-hidden bg-black/70 backdrop-blur-sm border border-acid/25 focus-within:border-acid/60 focus-within:shadow-[4px_4px_0_rgba(200,255,0,0.15)] transition-all"
+          />
+        </Suspense>
 
         <div className="relative z-10">
           <VoicePanel />

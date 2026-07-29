@@ -1,4 +1,5 @@
 import { SOUNDS, type SoundColor } from "../lib/sounds";
+import { audioEngine } from "../lib/audioEngine";
 import { pick, t } from "../lib/i18n";
 import Rich from "./Rich";
 
@@ -39,11 +40,17 @@ export default function Inspector({
         <Title text={t("insp.sounds")} />
         <div className="space-y-1.5">
           {SOUNDS.map((s) => (
-            <div key={s.id} className="flex items-baseline gap-3 text-xs">
+            <button
+              key={s.id}
+              onClick={() => void audioEngine.previewSound(s.id)}
+              title={t("vox.playTitle")}
+              aria-label={`${s.id} — ${t("vox.playTitle")}`}
+              className="w-full flex items-baseline gap-3 text-xs text-left hover:bg-acid/5 px-1 -mx-1 transition-colors"
+            >
               <code className={`w-6 font-bold ${COLOR_TEXT[s.color]}`}>{s.id}</code>
               <span className="text-slate-400 flex-1">{pick(s.name)}</span>
               <span className="text-fog/70">{s.feel}</span>
-            </div>
+            </button>
           ))}
           <div className="flex items-baseline gap-3 text-xs">
             <code className="w-6 font-bold text-fog">~</code>
@@ -51,7 +58,8 @@ export default function Inspector({
             <span className="text-fog/70">…</span>
           </div>
         </div>
-        <p className="text-[10px] text-fog/70 mt-2 leading-relaxed">
+        <p className="text-[10px] text-fog/70 mt-2 leading-relaxed">{t("insp.tap")}</p>
+        <p className="text-[10px] text-fog/70 mt-1 leading-relaxed">
           <Rich text={t("insp.aliases")} />
         </p>
       </section>

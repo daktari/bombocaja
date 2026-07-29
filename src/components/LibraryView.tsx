@@ -36,8 +36,8 @@ export default function LibraryView({ onLoad }: { onLoad: (code: string, bpm?: n
     setPatterns(loadPatterns());
   };
 
-  const copyLink = async (id: string, code: string) => {
-    await navigator.clipboard.writeText(patternUrl(code));
+  const copyLink = async (id: string, code: string, bpm?: number) => {
+    await navigator.clipboard.writeText(patternUrl(code, bpm));
     setCopiedId(id);
     window.setTimeout(() => setCopiedId((current) => (current === id ? null : current)), 1500);
   };
@@ -146,7 +146,8 @@ export default function LibraryView({ onLoad }: { onLoad: (code: string, bpm?: n
                       {t("lib.open")}
                     </button>
                     <button
-                      onClick={() => void copyLink(p.id, p.code)}
+                      onClick={() => void copyLink(p.id, p.code, p.bpm)}
+                      aria-label={t("ed.share")}
                       className="px-3 py-1.5 uppercase tracking-wider text-slate-300 border border-white/15 hover:border-acid/60 hover:text-acid transition-all"
                     >
                       {copiedId === p.id ? "✓" : "↗"}

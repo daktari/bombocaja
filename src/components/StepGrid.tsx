@@ -1,5 +1,6 @@
-import type { LaneDef, Node } from "../lib/parser";
+import { degreeToMidi, type LaneDef, type Node } from "../lib/parser";
 import { soundDef, type SoundColor } from "../lib/sounds";
+import { audioEngine } from "../lib/audioEngine";
 import { t } from "../lib/i18n";
 
 const STEPS = 8;
@@ -23,15 +24,17 @@ function hitStyle(id: string): string {
  * Recursive cell: groups split the cell horizontally, alternation shows
  * the currently active choice (ring), probability renders translucent.
  */
-function NodeCell({ node, cycle }: { node: Node; cycle: number }) {
+function NodeCell({ node, cycle, lane }: { node: Node; cycle: number; lane: LaneDef }) {
   switch (node.kind) {
     case "rest":
       return <div className="flex-1 h-full bg-white/5" />;
     case "hit":
       return (
         <div
+          onClick={() => void audioEngine.previewSound(node.id, node.variant, lane.kit)}
+          title={t("vox.playTitle")}
           className={
-            "flex-1 h-full flex items-center justify-center text-[9px] font-bold text-black overflow-hidden " +
+            "flex-1 h-full flex items-center justify-center text-[9px] font-bold text-black overflow-hidden cursor-pointer " +
             hitStyle(node.id)
           }
         >
@@ -41,7 +44,16 @@ function NodeCell({ node, cycle }: { node: Node; cycle: number }) {
     case "note":
     case "degree":
       return (
-        <div className="flex-1 h-full flex items-center justify-center text-[9px] font-bold text-black overflow-hidden bg-ice/85 shadow-[0_0_6px_rgba(0,229,255,0.5)]">
+        <div
+          onClick={() =>
+            void audioEngine.previewNote(
+              lane.synth,
+              node.kind === "note" ? node.midi : degreeToMidi(node.n, lane.scale)
+            )
+          }
+          title={t("vox.playTitle")}
+          className="flex-1 h-full flex items-center justify-center text-[9px] font-bold text-black overflow-hidden cursor-pointer bg-ice/85 shadow-[0_0_6px_rgba(0,229,255,0.5)]"
+        >
           {node.label}
         </div>
       );
@@ -49,7 +61,7 @@ function NodeCell({ node, cycle }: { node: Node; cycle: number }) {
       return (
         <div className="flex-1 h-full flex gap-0.5 min-w-0">
           {node.children.map((child, i) => (
-            <NodeCell key={i} node={child} cycle={cycle} />
+            <NodeCell key={i} node={child} cycle={cycle} lane={lane} />
           ))}
         </div>
       );
@@ -57,14 +69,14 @@ function NodeCell({ node, cycle }: { node: Node; cycle: number }) {
       const n = node.choices.length;
       return (
         <div className="flex-1 h-full flex ring-1 ring-mag/60 min-w-0">
-          <NodeCell node={node.choices[cycle % n]} cycle={Math.floor(cycle / n)} />
+          <NodeCell node={node.choices[cycle % n]} cycle={Math.floor(cycle / n)} lane={lane} />
         </div>
       );
     }
     case "prob":
       return (
         <div className="flex-1 h-full flex opacity-50 min-w-0">
-          <NodeCell node={node.child} cycle={cycle} />
+          <NodeCell node={node.child} cycle={cycle} lane={lane} />
         </div>
       );
   }
@@ -151,7 +163,7 @@ export default function StepGrid({ lanes, step, laneGains, onLaneGain, locks, on
                       (active ? " ring-2 ring-acid brightness-150 scale-105" : "")
                     }
                   >
-                    <NodeCell node={node} cycle={laneCycle} />
+                    <NodeCell node={node} cycle={laneCycle} lane={lane} />
                   </div>
                 );
               })}
