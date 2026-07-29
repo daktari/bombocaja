@@ -21,12 +21,9 @@ interface Props {
   onCodeChange: (code: string) => void;
   bpm: number;
   onBpmChange: (bpm: number) => void;
-  /** First-visit hero overlay */
-  hero?: boolean;
-  onHeroDone?: () => void;
 }
 
-export default function EditorView({ code, onCodeChange, bpm, onBpmChange, hero, onHeroDone }: Props) {
+export default function EditorView({ code, onCodeChange, bpm, onBpmChange }: Props) {
   const [volume, setVolume] = useState(0.9);
   const [laneGains, setLaneGains] = useState<number[]>([]);
   const [saveOpen, setSaveOpen] = useState(false);
@@ -150,44 +147,8 @@ export default function EditorView({ code, onCodeChange, bpm, onBpmChange, hero,
     }
   };
 
-  const startHero = () => {
-    onHeroDone?.();
-    play();
-  };
-
   return (
     <div className="flex flex-1 min-h-0 relative">
-      {hero && (
-        <div className="absolute inset-0 z-30 bg-ink/90 backdrop-blur-sm flex items-center justify-center">
-          <div className="text-center space-y-6 max-w-md px-6">
-            <div className="text-lg tracking-widest select-none uppercase">
-              <span className="text-fog">[</span>
-              <span className="text-acid">bombo</span>
-              <span className="text-mag">caja</span>
-              <span className="text-fog">]</span>
-            </div>
-            <h1 className="text-3xl text-slate-100 leading-snug uppercase tracking-wide">
-              {t("hero.title")}
-            </h1>
-            <p className="text-sm text-slate-400 leading-relaxed">{t("hero.sub")}</p>
-            <button
-              onClick={startHero}
-              className="px-12 py-4 text-xl font-bold uppercase tracking-widest text-black bg-acid shadow-[6px_6px_0_#ff3ea5] hover:shadow-[3px_3px_0_#ff3ea5] hover:translate-x-[3px] hover:translate-y-[3px] transition-all"
-            >
-              {t("hero.play")}
-            </button>
-            <div>
-              <button
-                onClick={onHeroDone}
-                className="text-xs text-fog hover:text-acid transition-colors uppercase tracking-wider"
-              >
-                {t("hero.skip")}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {panel && (
         <div
           className={

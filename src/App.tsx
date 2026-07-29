@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import TopNav, { type Tab } from "./components/TopNav";
 import EditorView, { DEFAULT_CODE } from "./components/EditorView";
 import LearnView from "./components/LearnView";
@@ -13,17 +13,16 @@ const VISITED_KEY = "bombocaja.visited";
 const SHARED = typeof location !== "undefined" ? sharedFromHash() : null;
 
 export default function App() {
-  const [hero, setHero] = useState(() => !localStorage.getItem(VISITED_KEY) && SHARED === null);
+  // First visit lands straight in the editor with the welcome pattern loaded.
   const [editorCode, setEditorCode] = useState<string>(
     () => SHARED?.code ?? (localStorage.getItem(VISITED_KEY) ? DEFAULT_CODE : HERO_CODE)
   );
   const [tab, setTab] = useState<Tab>("editor");
   const [bpm, setBpm] = useState(SHARED?.bpm ?? DEFAULT_BPM);
 
-  const heroDone = () => {
-    setHero(false);
+  useEffect(() => {
     localStorage.setItem(VISITED_KEY, "1");
-  };
+  }, []);
 
   const openInEditor = (code: string, patternBpm?: number) => {
     setEditorCode(code);
@@ -41,8 +40,6 @@ export default function App() {
             onCodeChange={setEditorCode}
             bpm={bpm}
             onBpmChange={setBpm}
-            hero={hero}
-            onHeroDone={heroDone}
           />
         )}
         {tab === "learn" && <LearnView />}

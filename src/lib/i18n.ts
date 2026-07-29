@@ -48,12 +48,6 @@ const ES: Record<string, string> = {
   "ed.undoAuto": "deshacer la última mutación de AUTO",
   "insp.tap": "Toca un sonido para escucharlo.",
 
-  "hero.title": "Haz música escribiendo palabras",
-  "hero.sub":
-    "No hace falta saber música. Ya hay un ritmo esperándote — cuando suene, cambia cualquier palabra y escucha qué pasa.",
-  "hero.play": "▶ Dale a Play",
-  "hero.skip": "explorar por mi cuenta →",
-
   "sidebar.hint": "Haz clic en uno para cargarlo en el editor.",
 
   "ln.lessons": "Lecciones",
@@ -197,12 +191,6 @@ const EN: Record<string, string> = {
   "ed.bars": "bars to export",
   "ed.undoAuto": "undo the last AUTO mutation",
   "insp.tap": "Tap a sound to hear it.",
-
-  "hero.title": "Make music by typing words",
-  "hero.sub":
-    "No musical knowledge needed. There's already a beat waiting for you — once it plays, change any word and hear what happens.",
-  "hero.play": "▶ Hit Play",
-  "hero.skip": "explore on my own →",
 
   "sidebar.hint": "Click one to load it into the editor.",
 
