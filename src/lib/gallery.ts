@@ -10,7 +10,7 @@ export interface GalleryPattern {
 }
 
 /** The pattern loaded on a first visit — has to sound great instantly. */
-export const HERO_CODE = `-- toca cualquier palabra y escucha
+export const HERO_CODE = `-- bakaluti · toca cualquier palabra y escucha
 bd ~ [~ bd] ~ bd ~ [~ bd] ~ | kit 808 | gain 0.9 -- el bombo
 hh*2 hh hh*2 <hh ho> | kit 808 | gain 0.4 | swing 0.15 -- los hats
 0 0 3 5 | synth acid | scale menor | delay 0.2 | gain 0.7 -- bajo ácido

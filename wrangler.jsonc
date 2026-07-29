@@ -1,6 +1,6 @@
 {
   // Cloudflare Workers static assets — deployed with `npx wrangler deploy`
-  "name": "bombocaja",
+  "name": "bakaluti",
   "compatibility_date": "2025-01-01",
   "assets": {
     "directory": "./dist",

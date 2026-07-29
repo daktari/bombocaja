@@ -1,3 +1,4 @@
+// "bombocaja.*" are legacy internal keys — kept so existing users retain their data
 const PROGRESS_KEY = "bombocaja.progress";
 const PATTERNS_KEY = "bombocaja.patterns";
 

@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { decodePattern, encodePattern, patternUrl, sharedFromHash } from "./share";
 
-const fakeLocation = { origin: "https://bombocaja.test", pathname: "/", hash: "" };
+const fakeLocation = { origin: "https://bakaluti.test", pathname: "/", hash: "" };
 
 beforeEach(() => {
   (globalThis as { location?: typeof fakeLocation }).location = { ...fakeLocation };

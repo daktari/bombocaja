@@ -1,6 +1,6 @@
-# bombocaja 🥁
+# bakaluti 🥁
 
-Un mini-playground web para aprender a hacer ritmos escribiendo texto.
+Antes «bombocaja». Un mini-playground web para aprender a hacer ritmos escribiendo texto.
 Inspirado en Strudel / TidalCycles, pero radicalmente simplificado para
 gente sin ningún conocimiento musical.
 
@@ -173,6 +173,13 @@ sintetizadas de respaldo.
 - **PWA**: instalable, con service worker que cachea la app y los samples ya
   descargados (funciona sin conexión tras la primera visita; el SW solo se
   activa en el build de producción).
+
+## Para IAs (vibe coding)
+
+El lenguaje es inventado, así que los LLMs no lo conocen de serie. La
+especificación completa vive en [`/llms.txt`](public/llms.txt) — en
+producción: `https://bakaluti.com/llms.txt`. Pásasela a Claude Code,
+Cursor o cualquier modelo como contexto y generará patrones válidos.
 
 ## Créditos y licencia
 

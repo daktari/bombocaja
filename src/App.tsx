@@ -7,6 +7,7 @@ import { sharedFromHash } from "./lib/share";
 import { DEFAULT_BPM } from "./lib/audioEngine";
 import { HERO_CODE } from "./lib/gallery";
 
+// "bombocaja.*" are legacy internal keys — kept so existing users retain their data
 const VISITED_KEY = "bombocaja.visited";
 
 // A shared pattern in the URL (#p=…) opens directly in the editor, at its tempo.
