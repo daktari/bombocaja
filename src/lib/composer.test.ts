@@ -58,6 +58,24 @@ describe("composer", () => {
     }
   });
 
+  for (const style of ["motor", "oxido", "casa"] as const) {
+    it(`${style}: no non-kick line SHAPE dominates the channel`, () => {
+      const N = 300;
+      const shapes = new Map<string, number>();
+      for (let seed = 1; seed <= N; seed++) {
+        const track = compose(style, seed * 11 + 3);
+        for (const line of track.code.split("\n")) {
+          const shape = line.replace(/-?\d+(\.\d+)?/g, "#").trim();
+          if (shape.includes("bd")) continue; // the four-on-the-floor anchor MAY repeat
+          shapes.set(shape, (shapes.get(shape) ?? 0) + 1);
+        }
+      }
+      for (const [shape, n] of shapes) {
+        expect(n / N, shape).toBeLessThanOrEqual(0.6);
+      }
+    });
+  }
+
   it("different seeds produce different tracks", () => {
     const codes = new Set(
       Array.from({ length: 50 }, (_, i) => compose("motor", i * 7 + 1).code)
