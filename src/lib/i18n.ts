@@ -66,8 +66,8 @@ const ES: Record<string, string> = {
   "ln.next": "Siguiente:",
   "ln.footer": "Todo lo que aprendas aquí funciona igual en el Editor",
 
-  "lib.remix": "Para remezclar",
-  "lib.remixSub": "Puntos de partida con estilo. Escúchalos aquí mismo, ábrelos y hazlos tuyos.",
+  "lib.remix": "Ejemplos",
+  "lib.remixSub": "Dos puntos de partida para remezclar. Tus ritmos guardados aparecen debajo.",
   "lib.listen": "▶ Escuchar",
   "lib.stop": "■ Parar",
   "lib.remixBtn": "▸ Remezclar",
@@ -225,8 +225,8 @@ const EN: Record<string, string> = {
   "ln.next": "Next:",
   "ln.footer": "Everything you learn here works the same in the Editor",
 
-  "lib.remix": "To remix",
-  "lib.remixSub": "Starting points with style. Listen right here, open them and make them yours.",
+  "lib.remix": "Examples",
+  "lib.remixSub": "Two starting points to remix. Your saved beats appear below.",
   "lib.listen": "▶ Listen",
   "lib.stop": "■ Stop",
   "lib.remixBtn": "▸ Remix",
