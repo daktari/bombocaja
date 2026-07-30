@@ -80,7 +80,10 @@ function sparse(rng: Rng, token: string, length: number, hits: number): string {
 /** MOTOR — clean machine soul: 4-chord pad progressions, funk bass. */
 function motor(rng: Rng): Sketch {
   const bpm = rint(rng, 122, 128);
-  const groove = rnum(rng, 0.12, 0.25); // ONE groove for the whole track
+  const hatKind = rng();
+  // ONE groove — and if the hats are the straight 3-step polymeter, the
+  // whole track goes straight with them (no split feel)
+  const groove = hatKind < 0.75 ? rnum(rng, 0.12, 0.25) : 0;
   const lanes: Lane[] = [];
 
   lanes.push({
@@ -94,7 +97,6 @@ function motor(rng: Rng): Sketch {
   lanes.push({ tier: 2, line: `~ ho ~ ho | kit 909 | gain ${rnum(rng, 0.35, 0.45)} -- contratiempo` });
 
   // hats: 16ths, straight 8ths with ?, or a 3-step polymeter shimmer
-  const hatKind = rng();
   if (hatKind < 0.45) {
     lanes.push({
       tier: 3,
@@ -122,7 +124,7 @@ function motor(rng: Rng): Sketch {
   const root = pick(rng, [0, 0, 0, -2]);
   lanes.push({
     tier: 2,
-    line: `${riff(rng, pick(rng, bassTemplates), root, [3, 5, 7, -2].filter((d) => d !== root))} | synth bass | scale menor | swing ${groove} | gain ${rnum(rng, 0.65, 0.75)} -- bajo funk`,
+    line: `${riff(rng, pick(rng, bassTemplates), root, [3, 5, 7, -2].filter((d) => d !== root))} | synth bass | scale menor${groove > 0 ? ` | swing ${groove}` : ""} | gain ${rnum(rng, 0.65, 0.75)} -- bajo funk`,
   });
 
   // real 4-position progression, two parallel voices
@@ -156,7 +158,7 @@ function motor(rng: Rng): Sketch {
   } else {
     lanes.push({
       tier: 3,
-      line: `${riff(rng, "R ~ ~ <X ~> ~ ~ R ~", 0, [7, 10, 12])} | synth acid | scale menor | delay ${rnum(rng, 0.25, 0.35)} | gain ${rnum(rng, 0.3, 0.38)} -- ácido lejano`,
+      line: `${riff(rng, "R ~ ~ <X ~> ~ ~ R ~", 7, [12, 14, 10])} | synth acid | scale menor | delay ${rnum(rng, 0.25, 0.35)} | gain ${rnum(rng, 0.3, 0.38)} -- ácido lejano`,
     });
   }
 
@@ -170,7 +172,7 @@ function oxido(rng: Rng): Sketch {
 
   lanes.push({
     tier: 1,
-    line: `bd${chance(rng, 0.6) ? `:${rint(rng, 0, 7)}` : ""} bd bd bd | kit 909 | drive ${rnum(rng, 0.55, 0.8)} | gain 0.9 -- el martillo`,
+    line: `bd${chance(rng, 0.8) ? `:${rint(rng, 0, 7)}` : ""} bd bd bd | kit 909 | drive ${rnum(rng, 0.55, 0.8)} | gain 0.9 -- el martillo`,
   });
   lanes.push({
     tier: 2,
@@ -184,17 +186,19 @@ function oxido(rng: Rng): Sketch {
   // THE defining layer: loud, driven, odd-length percussion that rolls
   const tom = pick(rng, ["mt", "lt", "rm"]);
   const oddLen = pick(rng, [5, 7]);
+  const tomPan = span(rng, 0.25, 0.5);
   lanes.push({
     tier: 1,
-    line: `${sparse(rng, tom, oddLen, rint(rng, 2, 3))} | drive ${rnum(rng, 0.4, 0.6)} | pan ${span(rng, 0.25, 0.5)} | gain ${rnum(rng, 0.45, 0.55)} -- ${tom} rodando, ${oddLen} contra 4`,
+    line: `${sparse(rng, tom, oddLen, rint(rng, 2, 3))} | drive ${rnum(rng, 0.4, 0.6)} | pan ${tomPan} | gain ${rnum(rng, 0.45, 0.55)} -- ${tom} rodando, ${oddLen} contra 4`,
   });
 
-  // second percussion: euclidean grid-filler, dry
+  // second percussion answers on the OTHER side of the stereo field
   if (chance(rng, 0.7)) {
     const [k, n] = pick(rng, [[5, 16], [7, 16], [3, 8]] as [number, number][]);
+    const answerPan = -Math.sign(tomPan) * rnum(rng, 0.2, 0.45);
     lanes.push({
       tier: 3,
-      line: `${pick(rng, ["rm", "ht"])}(${k},${n}) | drive ${rnum(rng, 0.3, 0.5)} | pan ${span(rng, 0.2, 0.45)} | gain ${rnum(rng, 0.35, 0.42)}${chance(rng, 0.6) ? " | every 4 rev" : ""} -- grieta`,
+      line: `${pick(rng, ["rm", "ht"])}(${k},${n}) | drive ${rnum(rng, 0.3, 0.5)} | pan ${answerPan} | gain ${rnum(rng, 0.35, 0.42)}${chance(rng, 0.6) ? " | every 4 rev" : ""} -- grieta`,
     });
   }
 
@@ -208,7 +212,7 @@ function oxido(rng: Rng): Sketch {
   } else {
     lanes.push({
       tier: 1,
-      line: `<-7 ${pick(rng, ["-5", "-9"])}> ~ | synth pad | scale menor | slow 4 | lpf ${rint(rng, 300, 500)} | drive ${rnum(rng, 0.3, 0.5)} | gain ${rnum(rng, 0.55, 0.65)} -- drone grave`,
+      line: `<-7 ${pick(rng, ["-5", "-9", "-4", "-12"])}> ${chance(rng, 0.5) ? "~" : "~ ~"} | synth pad | scale menor | slow 4 | lpf ${rint(rng, 260, 520)} | drive ${rnum(rng, 0.3, 0.5)} | gain ${rnum(rng, 0.55, 0.65)} -- drone grave`,
     });
   }
 
@@ -242,7 +246,7 @@ function casa(rng: Rng): Sketch {
   });
   lanes.push({
     tier: 2,
-    line: `~ cp ~ cp | kit ${kit} | reverb ${rnum(rng, 0.25, 0.35)} | gain 0.5 -- palmada`,
+    line: `~ cp ~ cp | kit ${kit} | swing ${groove} | reverb ${rnum(rng, 0.25, 0.35)} | gain 0.5 -- palmada`,
   });
 
   if (chance(rng, 0.5)) {
@@ -269,16 +273,25 @@ function casa(rng: Rng): Sketch {
     line: `${riff(rng, pick(rng, bassTemplates), root, [4, 7, root + 4])} | synth bass | scale mayor | swing ${groove} | gain ${rnum(rng, 0.65, 0.72)} -- bajo saltarín`,
   });
 
-  // sparkles with a real 4-position contour
+  // sparkles with a real 4-position contour…
   const prog = pick(rng, [
     [7, 9, 11, 9],
     [9, 7, 12, 11],
     [7, 11, 9, 14],
   ]);
+  const sparkleDelay = rnum(rng, 0.45, 0.55);
+  const sparklePan = span(rng, 0.2, 0.4);
   lanes.push({
     tier: 3,
-    line: `~ <${prog.join(" ")}> ~ ~ <${pick(rng, [11, 12, 14])} ~> ~ ~ ~ | synth piano | scale mayor | delay ${rnum(rng, 0.45, 0.55)} | pan ${span(rng, 0.2, 0.4)} | gain ${rnum(rng, 0.4, 0.48)} -- pianito con eco`,
+    line: `~ <${prog.join(" ")}> ~ ~ <${pick(rng, [11, 12, 14])} ~> ~ ~ ~ | synth piano | scale mayor | delay ${sparkleDelay} | pan ${sparklePan} | gain ${rnum(rng, 0.4, 0.48)} -- pianito con eco`,
   });
+  // …and half the time a parallel third turns it into a proper house stab
+  if (chance(rng, 0.5)) {
+    lanes.push({
+      tier: 3,
+      line: `~ <${prog.map((d) => d + 2).join(" ")}> ~ ~ ~ ~ ~ ~ | synth piano | scale mayor | delay ${sparkleDelay} | pan ${-sparklePan} | gain ${rnum(rng, 0.3, 0.36)} -- stab: la tercera`,
+    });
+  }
 
   return { bpm, lanes };
 }
@@ -308,10 +321,15 @@ function niebla(rng: Rng): Sketch {
     line: `<${prog.join(" ")}> ${"~ ".repeat(pick(rng, [4, 5, 6])).trim()} | synth pad | scale ${scale} | slow 4 | delay ${padDelay} | reverb ${rev} | gain ${rnum(rng, 0.45, 0.55)} -- bruma`,
   });
 
-  const motifs = ["7 ~ ~ ~ <9 12> ~ ~ ~ ~", "<7 9> ~ ~ ~ ~ 12 ~ ~ ~", "9 ~ ~ <7 ~> ~ ~ ~ <12 14> ~"];
+  const motifs = [
+    "7 ~ ~ ~ <9 12> ~ ~ ~ ~",
+    "<7 9> ~ ~ ~ ~ 12 ~ ~ ~",
+    "9 ~ ~ <7 ~> ~ ~ ~ <12 14> ~",
+    "7 ~ ~ ~ <9 13> ~ ~ 12? ~",
+  ];
   lanes.push({
     tier: 2,
-    line: `${pick(rng, motifs)} | synth piano | scale ${scale} | delay ${rnum(rng, 0.5, 0.6)} | reverb ${rnum(rng, 0.4, 0.5)} | gain ${rnum(rng, 0.4, 0.48)} -- destellos`,
+    line: `${pick(rng, motifs)} | synth piano | scale ${scale} | delay ${rnum(rng, 0.5, 0.6)} | reverb ${rnum(rng, 0.4, 0.5)} | gain ${rnum(rng, 0.4, 0.48)}${chance(rng, 0.4) ? " | every 8 rev" : ""} -- destellos`,
   });
 
   if (chance(rng, 0.6)) {

@@ -2,10 +2,11 @@ import { useState } from "react";
 import { getLang, t, toggleLang } from "../lib/i18n";
 import Rich from "./Rich";
 
-export type Tab = "editor" | "learn" | "library";
+export type Tab = "editor" | "fm" | "learn" | "library";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "editor", label: "Editor" },
+  { id: "fm", label: "FM" },
   { id: "learn", label: "Learn" },
   { id: "library", label: "Library" },
 ];
