@@ -327,15 +327,49 @@ function niebla(rng: Rng): Sketch {
   // the seed first decides WHAT KIND of ambient piece this is
   const archetype = pick(rng, ["coral", "destello", "latido", "marea"] as const);
 
-  const lowDrone = (slowVal: number, extraRests: number) =>
-    lanes.push({
-      tier: 1,
-      line: `<-7 ${pick(rng, ["-5", "-4", "-9", "-12"])}> ${"~ ".repeat(extraRests).trim()} | synth pad | scale ${scale} | slow ${slowVal} | lpf ${rint(rng, 400, 700)} | reverb ${rev} | gain ${rnum(rng, 0.5, 0.6)} -- suelo grave`,
-    });
+  // The floor FAMILY — what the piece stands on. Every track opening with
+  // the same pad-drone shape was the tell that unmasked the channel, so the
+  // seed now picks the floor's nature, not only its decimals. Base-step
+  // periods stay disjoint from each archetype's upper voices: pads = 24|32,
+  // sub = 12, media altura = 32, aliento = 10.
+  const floorLane = (opts: { shy?: boolean; noBreath?: boolean } = {}) => {
+    const soft = opts.shy ? -0.12 : 0;
+    const kinds = opts.noBreath
+      ? ["grave", "respira", "sub", "medio"]
+      : ["grave", "respira", "sub", "medio", "aliento"];
+    const kind = pick(rng, kinds);
+    const r = pick(rng, [-3, -5, -7, -10, -12]);
+    if (kind === "grave") {
+      lanes.push({
+        tier: 1,
+        line: `<${r} ${r + pick(rng, [2, -2, 3, -5])}> ${"~ ".repeat(pick(rng, [2, 3])).trim()} | synth pad | scale ${scale} | slow 8 | lpf ${rint(rng, 400, 700)} | reverb ${rev} | gain ${rnum(rng, 0.5 + soft, 0.6 + soft)} -- suelo grave`,
+      });
+    } else if (kind === "respira") {
+      lanes.push({
+        tier: 1,
+        line: `<${r} ${r + 2} ${r - 2} ${r + 4}> ~ ~ | synth pad | scale ${scale} | slow 8 | lpf ${rint(rng, 400, 650)} | reverb ${rev} | gain ${rnum(rng, 0.46 + soft, 0.56 + soft)} -- suelo que respira`,
+      });
+    } else if (kind === "sub") {
+      lanes.push({
+        tier: 1,
+        line: `${r} ~ ~ | synth bass | scale ${scale} | slow 4 | lpf ${rint(rng, 200, 320)} | gain ${rnum(rng, 0.55 + soft, 0.62 + soft)} -- suelo de sub`,
+      });
+    } else if (kind === "medio") {
+      lanes.push({
+        tier: 1,
+        line: `<${r + 7} ${r + 5}> ~ ~ ~ | synth pad | scale ${scale} | slow 8 | lpf ${rint(rng, 500, 800)} | reverb ${rev} | gain ${rnum(rng, 0.4 + soft, 0.48 + soft)} -- suelo a media altura`,
+      });
+    } else {
+      lanes.push({
+        tier: 1,
+        line: `ho ~ ~ ~ ~ | slow 2 | lpf ${rint(rng, 280, 420)} | reverb ${rev} | gain ${rnum(rng, 0.24, 0.3)} -- lecho de aliento`,
+      });
+    }
+  };
 
   if (archetype === "coral") {
     // three pad voices, unequal lengths — a chordal cloud, no melody at all
-    lowDrone(8, pick(rng, [2, 3])); // period 24 | 32 base steps
+    floorLane();
     const prog = pick(rng, [[0, 3, 5, 2], [0, 4, 2, 5], [0, 2, -2, 3]]);
     const progStr = prog
       .map((d, i) => (i === 2 && chance(rng, 0.5) ? `<${d} ${d + 2}>` : String(d)))
@@ -358,12 +392,7 @@ function niebla(rng: Rng): Sketch {
     }
   } else if (archetype === "destello") {
     // melody-led: the melody IS the intro; the floor is optional and shy
-    if (chance(rng, 0.6)) {
-      lanes.push({
-        tier: 1,
-        line: `<-7 ${pick(rng, ["-5", "-12"])}> ~ ~ | synth pad | scale ${scale} | slow 8 | lpf ${rint(rng, 400, 650)} | reverb ${rev} | gain ${rnum(rng, 0.38, 0.46)} -- suelo discreto`,
-      });
-    }
+    if (chance(rng, 0.6)) floorLane({ shy: true });
     const melodies = [
       "7 ~ 9 ~ <12 11> ~ ~ 7 ~ <5 9> ~ ~",
       "<9 7> ~ 12 ~ ~ <11 13> ~ 9 ~ ~ 7 ~",
@@ -382,7 +411,7 @@ function niebla(rng: Rng): Sketch {
     // the floor is a slow BASS pulse, not the same pad drone as everyone else
     lanes.push({
       tier: 1,
-      line: `-7 ${"~ ".repeat(pick(rng, [2, 4])).trim()} | synth bass | scale ${scale} | slow 2 | lpf ${rint(rng, 250, 350)} | gain ${rnum(rng, 0.55, 0.62)} -- pulso grave`,
+      line: `${pick(rng, [-5, -7, -10, -12])} ${"~ ".repeat(pick(rng, [2, 4])).trim()} | synth bass | scale ${scale} | slow 2 | lpf ${rint(rng, 250, 350)} | gain ${rnum(rng, 0.55, 0.62)} -- pulso grave`,
     });
     const prog = pick(rng, [[0, 3, 5, 2], [0, 2, -2, 3]]);
     const progStr = prog
@@ -406,7 +435,7 @@ function niebla(rng: Rng): Sketch {
     // bruma = len×4 (20|28) — no combination collides, so the voices
     // drift forever instead of hitting together.
     if (chance(rng, 0.5)) {
-      lowDrone(8, 2); // 24 base steps
+      floorLane({ noBreath: true }); // marea already has its own breath lane
     } else {
       lanes.push({
         tier: 1,
