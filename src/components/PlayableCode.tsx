@@ -11,7 +11,7 @@ export default function PlayableCode({ code }: { code: string }) {
 
   if (!playable) {
     return (
-      <pre className="bg-black border border-white/10 px-4 py-3 text-acid overflow-x-auto">
+      <pre className="bg-black border border-white/10 px-4 py-3 text-acid whitespace-pre-wrap break-words">
         {code}
       </pre>
     );
@@ -24,7 +24,7 @@ export default function PlayableCode({ code }: { code: string }) {
         (playing ? "border-acid/70 shadow-[3px_3px_0_rgba(200,255,0,0.2)]" : "border-white/10")
       }
     >
-      <pre className="px-4 py-3 pr-14 text-acid overflow-x-auto">{code}</pre>
+      <pre className="px-4 py-3 pr-14 text-acid whitespace-pre-wrap break-words">{code}</pre>
       <button
         onClick={playing ? stop : play}
         className={

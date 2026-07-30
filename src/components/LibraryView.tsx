@@ -65,7 +65,7 @@ export default function LibraryView({ onLoad }: { onLoad: (code: string, bpm?: n
                   <h2 className="text-sm text-slate-200 truncate">{pick(g.name)}</h2>
                   <span className="text-[10px] text-mag/80 shrink-0 uppercase tracking-wider">{pick(g.style)}</span>
                 </div>
-                <pre className="text-[11px] text-acid/70 bg-black border border-white/10 px-3 py-2 overflow-hidden max-h-20 leading-relaxed">
+                <pre className="text-[11px] text-acid/70 bg-black border border-white/10 px-3 py-2 overflow-hidden max-h-20 leading-relaxed whitespace-pre-wrap break-words">
                   {g.code}
                 </pre>
                 <div className="flex gap-2 text-xs">
@@ -121,7 +121,7 @@ export default function LibraryView({ onLoad }: { onLoad: (code: string, bpm?: n
                       {new Date(p.savedAt).toLocaleDateString()}
                     </span>
                   </div>
-                  <pre className="text-[11px] text-acid/70 bg-black border border-white/10 px-3 py-2 overflow-hidden max-h-20 leading-relaxed">
+                  <pre className="text-[11px] text-acid/70 bg-black border border-white/10 px-3 py-2 overflow-hidden max-h-20 leading-relaxed whitespace-pre-wrap break-words">
                     {p.code}
                   </pre>
                   <div className="flex gap-2 text-xs">

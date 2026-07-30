@@ -8,7 +8,7 @@ import VoicePanel from "./VoicePanel";
 
 const CodeEditor = lazy(() => import("./CodeEditor"));
 import { usePlayer } from "../lib/usePlayer";
-import { audioEngine, DEFAULT_BPM } from "../lib/audioEngine";
+import { audioEngine, DEFAULT_BPM, MIN_BPM, MAX_BPM } from "../lib/audioEngine";
 import { addPattern } from "../lib/storage";
 import { patternUrl } from "../lib/share";
 import { mutateCode } from "../lib/auto";
@@ -37,6 +37,9 @@ export default function EditorView({ code, onCodeChange, bpm, onBpmChange }: Pro
   const [locks, setLocks] = useState<boolean[]>([]);
   const [autoTrail, setAutoTrail] = useState<string[]>([]);
   const [exportBars, setExportBars] = useState(4);
+  /** Mobile: secondary-controls sheet ("⋯") and collapsible steps panel. */
+  const [more, setMore] = useState(false);
+  const [showSteps, setShowSteps] = useState(false);
   const lastMutation = useRef(-1);
 
   const flashFn = useRef<((from: number, to: number) => void) | null>(null);
@@ -147,6 +150,73 @@ export default function EditorView({ code, onCodeChange, bpm, onBpmChange }: Pro
     }
   };
 
+  // Save / share / export controls, shared by the desktop toolbar and the
+  // mobile "más controles" sheet (state is common, so both stay in sync).
+  const actionControls = (
+    <>
+      {saveOpen ? (
+        <span className="flex items-center gap-1">
+          <input
+            autoFocus
+            value={saveName}
+            onChange={(e) => setSaveName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") confirmSave();
+              if (e.key === "Escape") setSaveOpen(false);
+            }}
+            placeholder={t("ed.savePlaceholder")}
+            className="w-36 px-2 py-1.5 text-xs bg-black border border-acid/40 outline-none text-acid placeholder-fog"
+          />
+          <button
+            onClick={confirmSave}
+            className="px-2 py-1.5 text-xs text-acid border border-acid/40 hover:bg-acid hover:text-black transition-all"
+          >
+            ✓
+          </button>
+        </span>
+      ) : (
+        <button
+          onClick={() => setSaveOpen(true)}
+          className="px-3 py-1.5 text-xs uppercase tracking-wider text-slate-300 border border-white/15 hover:border-acid/60 hover:text-acid transition-all"
+        >
+          {t("ed.save")}
+        </button>
+      )}
+      <button
+        onClick={() => void copyLink()}
+        className="px-3 py-1.5 text-xs uppercase tracking-wider text-slate-300 border border-white/15 hover:border-acid/60 hover:text-acid transition-all"
+      >
+        {t("ed.share")}
+      </button>
+      <select
+        value={exportBars}
+        onChange={(e) => setExportBars(Number(e.target.value))}
+        aria-label={t("ed.bars")}
+        title={t("ed.bars")}
+        className="px-1 py-1.5 text-xs bg-black border border-white/15 text-fog outline-none"
+      >
+        {[2, 4, 8].map((n) => (
+          <option key={n} value={n}>
+            {n}c
+          </option>
+        ))}
+      </select>
+      <button
+        onClick={() => void exportWav()}
+        disabled={exporting}
+        className="px-3 py-1.5 text-xs uppercase tracking-wider border border-red-500/50 text-red-400 hover:bg-red-500 hover:text-black transition-all disabled:opacity-60"
+      >
+        {exporting ? (
+          <span className="blink">● REC…</span>
+        ) : (
+          <span>
+            <span className="text-red-500">●</span> Rec
+          </span>
+        )}
+      </button>
+    </>
+  );
+
   return (
     <div className="flex flex-1 min-h-0 relative">
       {panel && (
@@ -174,7 +244,8 @@ export default function EditorView({ code, onCodeChange, bpm, onBpmChange }: Pro
 
       <section className="flex-1 flex flex-col p-3 lg:p-4 gap-3 lg:gap-4 min-w-0 relative">
         <Visualizer />
-        <div className="relative z-10 flex items-center justify-between gap-3 flex-wrap">
+        {/* Desktop toolbar: everything in one row. */}
+        <div className="relative z-10 hidden lg:flex items-center justify-between gap-3 flex-wrap">
           <Transport
             playing={playing}
             onPlay={play}
@@ -208,84 +279,108 @@ export default function EditorView({ code, onCodeChange, bpm, onBpmChange }: Pro
             </button>
           )}
           <div className="flex items-center gap-2 flex-wrap">
-            <button
-              onClick={() => setPanel("snippets")}
-              className="lg:hidden px-3 py-1.5 text-xs uppercase tracking-wider text-fog border border-white/15 hover:text-acid transition-all"
-            >
-              ≡ Snippets
-            </button>
-            <button
-              onClick={() => setPanel("help")}
-              className="lg:hidden px-3 py-1.5 text-xs uppercase tracking-wider text-fog border border-white/15 hover:text-acid transition-all"
-            >
-              {t("ed.help")}
-            </button>
             {notice && <span className="text-[10px] text-acid">{notice}</span>}
-            {saveOpen ? (
-              <span className="flex items-center gap-1">
-                <input
-                  autoFocus
-                  value={saveName}
-                  onChange={(e) => setSaveName(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") confirmSave();
-                    if (e.key === "Escape") setSaveOpen(false);
-                  }}
-                  placeholder={t("ed.savePlaceholder")}
-                  className="w-36 px-2 py-1.5 text-xs bg-black border border-acid/40 outline-none text-acid placeholder-fog"
-                />
-                <button
-                  onClick={confirmSave}
-                  className="px-2 py-1.5 text-xs text-acid border border-acid/40 hover:bg-acid hover:text-black transition-all"
-                >
-                  ✓
-                </button>
-              </span>
-            ) : (
-              <button
-                onClick={() => setSaveOpen(true)}
-                className="px-3 py-1.5 text-xs uppercase tracking-wider text-slate-300 border border-white/15 hover:border-acid/60 hover:text-acid transition-all"
-              >
-                {t("ed.save")}
-              </button>
-            )}
-            <button
-              onClick={() => void copyLink()}
-              className="px-3 py-1.5 text-xs uppercase tracking-wider text-slate-300 border border-white/15 hover:border-acid/60 hover:text-acid transition-all"
-            >
-              {t("ed.share")}
-            </button>
-            <select
-              value={exportBars}
-              onChange={(e) => setExportBars(Number(e.target.value))}
-              aria-label={t("ed.bars")}
-              title={t("ed.bars")}
-              className="px-1 py-1.5 text-xs bg-black border border-white/15 text-fog outline-none"
-            >
-              {[2, 4, 8].map((n) => (
-                <option key={n} value={n}>
-                  {n}c
-                </option>
-              ))}
-            </select>
-            <button
-              onClick={() => void exportWav()}
-              disabled={exporting}
-              className="px-3 py-1.5 text-xs uppercase tracking-wider border border-red-500/50 text-red-400 hover:bg-red-500 hover:text-black transition-all disabled:opacity-60"
-            >
-              {exporting ? (
-                <span className="blink">● REC…</span>
-              ) : (
-                <span>
-                  <span className="text-red-500">●</span> Rec
-                </span>
-              )}
-            </button>
+            {actionControls}
             <span className="text-[10px] text-fog/70 select-none hidden xl:inline">
               ⌘/Ctrl+Enter ▶ · ⌘/Ctrl+. ■
             </span>
           </div>
         </div>
+
+        {/* Mobile toolbar: only the essentials; the rest lives behind "⋯". */}
+        <div className="relative z-10 flex lg:hidden items-center gap-2 flex-wrap">
+          <Transport playing={playing} onPlay={play} onStop={stop} bpm={bpm} />
+          <button
+            onClick={toggleAuto}
+            title={t("auto.title")}
+            className={
+              "px-3 py-1.5 text-xs font-bold uppercase tracking-widest border transition-all " +
+              (auto
+                ? "bg-mag text-black border-mag shadow-[0_0_14px_rgba(255,62,165,0.4)]"
+                : "border-mag/60 text-mag hover:bg-mag hover:text-black")
+            }
+          >
+            {auto ? <span className="blink">⟳</span> : "⟳"}
+          </button>
+          {auto && autoTrail.length > 0 && (
+            <button
+              onClick={undoAuto}
+              title={t("ed.undoAuto")}
+              aria-label={t("ed.undoAuto")}
+              className="px-3 py-1.5 text-xs uppercase tracking-widest border border-mag/40 text-mag/80 hover:bg-mag hover:text-black transition-all"
+            >
+              ↺ {autoTrail.length}
+            </button>
+          )}
+          <button
+            onClick={() => setMore((open) => !open)}
+            title={t("ed.more")}
+            aria-label={t("ed.more")}
+            aria-expanded={more}
+            className={
+              "px-3 py-1.5 text-xs font-bold border transition-all " +
+              (more
+                ? "bg-acid text-black border-acid"
+                : "border-white/15 text-fog hover:text-acid")
+            }
+          >
+            ⋯
+          </button>
+          <button
+            onClick={() => setPanel("snippets")}
+            className="px-3 py-1.5 text-xs uppercase tracking-wider text-fog border border-white/15 hover:text-acid transition-all"
+          >
+            ≡
+          </button>
+          <button
+            onClick={() => setPanel("help")}
+            className="px-3 py-1.5 text-xs uppercase tracking-wider text-fog border border-white/15 hover:text-acid transition-all"
+          >
+            ?
+          </button>
+        </div>
+        {notice && <div className="lg:hidden relative z-10 text-[10px] text-acid">{notice}</div>}
+
+        {/* Mobile "más controles" sheet. */}
+        {more && (
+          <div className="relative z-10 lg:hidden flex flex-col gap-3 border border-white/10 bg-panel p-3">
+            <label className="flex items-center gap-2 text-xs select-none">
+              <span className="w-12 text-[10px] uppercase tracking-widest text-fog">Tempo</span>
+              <input
+                type="range"
+                min={MIN_BPM}
+                max={MAX_BPM}
+                step={1}
+                value={bpm}
+                onChange={(e) => onBpmChange(Number(e.target.value))}
+                className="flex-1 accent-acid"
+              />
+              <span className="w-16 text-right led">{bpm} BPM</span>
+            </label>
+            <label className="flex items-center gap-2 text-xs select-none">
+              <span className="w-12 text-[10px] uppercase tracking-widest text-fog">Vol</span>
+              <input
+                type="range"
+                min={0}
+                max={1}
+                step={0.01}
+                value={volume}
+                onChange={(e) => setVolume(Number(e.target.value))}
+                className="flex-1 accent-mag"
+              />
+            </label>
+            <div className="flex items-center gap-2 flex-wrap">
+              <button
+                onClick={reset}
+                className="px-3 py-1.5 text-xs uppercase tracking-widest border border-white/20 text-fog hover:border-white/60 hover:text-white transition-all"
+              >
+                ↺ Reset
+              </button>
+              {actionControls}
+            </div>
+            <VoicePanel />
+          </div>
+        )}
 
         <Suspense
           fallback={
@@ -304,20 +399,31 @@ export default function EditorView({ code, onCodeChange, bpm, onBpmChange }: Pro
           />
         </Suspense>
 
-        <div className="relative z-10">
+        <div className="relative z-10 hidden lg:block">
           <VoicePanel />
         </div>
 
         <div className="relative z-10 shrink-0 max-h-56 overflow-y-auto border border-white/10 bg-panel p-3">
-          <div className="text-[10px] uppercase tracking-[0.2em] text-fog mb-2">{t("ed.steps")}</div>
-          <StepGrid
-            lanes={parsed.lanes}
-            step={step}
-            laneGains={laneGains}
-            onLaneGain={setLaneGain}
-            locks={locks}
-            onToggleLock={toggleLock}
-          />
+          <button
+            onClick={() => setShowSteps((open) => !open)}
+            aria-expanded={showSteps}
+            className="lg:hidden w-full text-left text-[10px] uppercase tracking-[0.2em] text-fog hover:text-acid transition-all"
+          >
+            {t("ed.steps")} {showSteps ? "▴" : "▾"}
+          </button>
+          <div className="hidden lg:block text-[10px] uppercase tracking-[0.2em] text-fog mb-2">
+            {t("ed.steps")}
+          </div>
+          <div className={(showSteps ? "block mt-2" : "hidden") + " lg:block lg:mt-0"}>
+            <StepGrid
+              lanes={parsed.lanes}
+              step={step}
+              laneGains={laneGains}
+              onLaneGain={setLaneGain}
+              locks={locks}
+              onToggleLock={toggleLock}
+            />
+          </div>
         </div>
       </section>
 
