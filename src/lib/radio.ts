@@ -1,6 +1,6 @@
 import { compose, type StyleName, type Track } from "./composer";
 import { ANCHORS } from "./anchors";
-import { mulberry32 } from "./rng";
+import { chance, mulberry32, rint, rnum } from "./rng";
 
 /**
  * The station is a pure function of the clock: the day is sliced into
@@ -10,6 +10,25 @@ import { mulberry32 } from "./rng";
  */
 
 export const SLOT_SECONDS = 150;
+
+/** Station IDs: every 8th slot on the main dial opens with a short jingle.
+ *  Offset 1 so an ID never lands on an anchor slot (those are slot % 4 === 0).
+ *  Niebla never gets one — nothing may interrupt the fog. */
+export const ID_EVERY = 8;
+export const ID_SECONDS = 10;
+
+/** The station's sonic logo: one FIXED rising motif (brand recognition),
+ *  dressed differently by each slot's seed. */
+export function stationId(slot: number): Track {
+  const rng = mulberry32(slot * 7 + 13);
+  const lead = chance(rng, 0.6) ? "acid" : "piano";
+  const code = [
+    `0 4 7 12 ~ ~ <12 14> ~ | synth ${lead} | scale mayor | delay ${rnum(rng, 0.3, 0.45)} | gain 0.55 -- la sintonía`,
+    `-12 ~ ~ ~ | synth bass | scale mayor | lpf ${rint(rng, 250, 350)} | gain 0.6 -- la raíz`,
+    ...(chance(rng, 0.5) ? [`hh ~ hh hh | gain ${rnum(rng, 0.16, 0.22)} -- aire`] : []),
+  ].join("\n");
+  return { style: "motor", title: "bakaluti FM", bpm: 122, states: [code], code };
+}
 
 export type Dial = "fm" | "niebla";
 
@@ -35,6 +54,8 @@ export interface OnAir {
   slot: number;
   track: Track;
   isAnchor: boolean;
+  /** first seconds of an ID slot: the jingle is on air, not a track */
+  isStationId: boolean;
   secondsIntoSlot: number;
   secondsLeft: number;
   /** which arrangement state should be sounding right now */
@@ -45,6 +66,19 @@ export function radioAt(dial: Dial, unixSeconds: number): OnAir {
   const slot = Math.floor(unixSeconds / SLOT_SECONDS);
   const secondsIntoSlot = unixSeconds - slot * SLOT_SECONDS;
   const rng = mulberry32(slot);
+
+  if (dial === "fm" && slot % ID_EVERY === 1 && secondsIntoSlot < ID_SECONDS) {
+    return {
+      dial,
+      slot,
+      track: stationId(slot),
+      isAnchor: false,
+      isStationId: true,
+      secondsIntoSlot,
+      secondsLeft: SLOT_SECONDS - secondsIntoSlot,
+      stateIndex: 0,
+    };
+  }
 
   const anchorPool =
     dial === "niebla"
@@ -81,6 +115,7 @@ export function radioAt(dial: Dial, unixSeconds: number): OnAir {
     slot,
     track,
     isAnchor,
+    isStationId: false,
     secondsIntoSlot,
     secondsLeft: SLOT_SECONDS - secondsIntoSlot,
     stateIndex,

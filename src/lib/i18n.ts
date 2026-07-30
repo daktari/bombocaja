@@ -178,6 +178,11 @@ const ES: Record<string, string> = {
   "fm.remix": "▸ Remezclar esto",
   "fm.anchor": "tema de la casa",
   "fm.left": "quedan",
+  "fm.moment": "compartir momento",
+  "fm.momentCopied": "enlace copiado — reproduce exactamente esto ✓",
+  "fm.replay": "repetición",
+  "fm.backLive": "directo",
+  "fm.id": "sintonía de cadena",
   "fm.note":
     "La emisión es una función del reloj: todo el que sintoniza ahora oye este mismo tema, sin servidores. Si te gusta, remézclalo — el directo sigue para los demás.",
 
@@ -342,6 +347,11 @@ const EN: Record<string, string> = {
   "fm.remix": "▸ Remix this",
   "fm.anchor": "house track",
   "fm.left": "left",
+  "fm.moment": "share this moment",
+  "fm.momentCopied": "link copied — it replays exactly this ✓",
+  "fm.replay": "replay",
+  "fm.backLive": "live",
+  "fm.id": "station ID",
   "fm.note":
     "The broadcast is a function of the clock: everyone tuning in right now hears this same track, with no servers. Like it? Remix it — the live feed goes on for everyone else.",
 

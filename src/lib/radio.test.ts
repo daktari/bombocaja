@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { radioAt, SLOT_SECONDS } from "./radio";
+import { radioAt, SLOT_SECONDS, ID_EVERY, ID_SECONDS } from "./radio";
 import { ANCHORS } from "./anchors";
 import { critique } from "./critic";
 import { parsePattern } from "./parser";
@@ -59,6 +59,29 @@ describe("the station", () => {
   });
 });
 
+describe("station IDs", () => {
+  const idSlot = 9_000_000 * ID_EVERY + 1; // slot % ID_EVERY === 1
+
+  it("open their slot on the main dial, then hand over to the track", () => {
+    const during = radioAt("fm", idSlot * SLOT_SECONDS + 2);
+    expect(during.isStationId).toBe(true);
+    expect(during.track.title).toBe("bakaluti FM");
+    expect(parsePattern(during.track.code).warnings).toEqual([]);
+
+    const after = radioAt("fm", idSlot * SLOT_SECONDS + ID_SECONDS + 1);
+    expect(after.isStationId).toBe(false);
+    expect(after.track.title).not.toBe("bakaluti FM");
+  });
+
+  it("never interrupt niebla and never land on an anchor slot", () => {
+    expect(radioAt("niebla", idSlot * SLOT_SECONDS + 2).isStationId).toBe(false);
+    for (let i = 0; i < 200; i++) {
+      const air = radioAt("fm", (9_500_000 + i) * SLOT_SECONDS + 2);
+      if (air.isStationId) expect(air.isAnchor).toBe(false);
+    }
+  });
+});
+
 describe("anchors", () => {
   it("every anchor parses clean", () => {
     for (const anchor of ANCHORS) {
@@ -69,7 +92,7 @@ describe("anchors", () => {
   it("generative tracks aired by the station pass the critic", () => {
     for (let i = 1; i < 30; i++) {
       const air = radioAt("fm", (8_000_000 + i) * SLOT_SECONDS + 5);
-      if (air.isAnchor) continue;
+      if (air.isAnchor || air.isStationId) continue;
       const verdict = critique(air.track, air.track.style);
       expect(verdict.issues, `slot ${air.slot} (${air.track.style})`).toEqual([]);
     }

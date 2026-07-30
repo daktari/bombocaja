@@ -1,5 +1,12 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { decodePattern, encodePattern, patternUrl, sharedFromHash } from "./share";
+import {
+  decodePattern,
+  encodePattern,
+  momentFromHash,
+  momentUrl,
+  patternUrl,
+  sharedFromHash,
+} from "./share";
 
 const fakeLocation = { origin: "https://bakaluti.test", pathname: "/", hash: "" };
 
@@ -37,5 +44,22 @@ describe("pattern sharing", () => {
   it("returns null when there is no shared pattern", () => {
     globalThis.location.hash = "";
     expect(sharedFromHash()).toBeNull();
+  });
+});
+
+describe("FM moments", () => {
+  it("round-trips a moment through the url hash", () => {
+    const url = momentUrl("niebla", 1_900_000_123);
+    expect(url).toBe("https://bakaluti.test/#fm=niebla&t=1900000123");
+    expect(momentFromHash("#fm=niebla&t=1900000123")).toEqual({
+      dial: "niebla",
+      t: 1_900_000_123,
+    });
+  });
+
+  it("rejects unknown dials and garbage", () => {
+    expect(momentFromHash("#fm=am&t=123")).toBeNull();
+    expect(momentFromHash("#fm=fm&t=abc")).toBeNull();
+    expect(momentFromHash("#p=whatever")).toBeNull();
   });
 });

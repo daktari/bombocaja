@@ -33,3 +33,23 @@ export function sharedFromHash(): SharedPattern | null {
   if (code === null) return null;
   return { code, bpm: match[2] ? parseInt(match[2], 10) : undefined };
 }
+
+// ---------------------------------------------------------------- FM moments
+// The broadcast is a pure function of the clock, so a dial + a unix second
+// IS a recording: the link replays exactly what was on air at that moment.
+
+export interface SharedMoment {
+  dial: "fm" | "niebla";
+  t: number;
+}
+
+export function momentUrl(dial: SharedMoment["dial"], unixSeconds: number): string {
+  return `${location.origin}${location.pathname}#fm=${dial}&t=${unixSeconds}`;
+}
+
+/** FM moment shared in the current URL, if any. */
+export function momentFromHash(hash?: string): SharedMoment | null {
+  const match = (hash ?? location.hash).match(/^#fm=(fm|niebla)&t=(\d+)/);
+  if (!match) return null;
+  return { dial: match[1] as SharedMoment["dial"], t: parseInt(match[2], 10) };
+}
