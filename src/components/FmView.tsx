@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePlayer } from "../lib/usePlayer";
+import { audioEngine } from "../lib/audioEngine";
 import { radioAt, CHANNELS, SLOT_SECONDS, type Dial, type OnAir } from "../lib/radio";
 import Visualizer from "./Visualizer";
 import { t } from "../lib/i18n";
@@ -21,9 +22,27 @@ export default function FmView({ onRemix }: { onRemix: (code: string, bpm?: numb
   const code = air.track.states[Math.min(air.stateIndex, air.track.states.length - 1)];
   const { playing, play, stop } = usePlayer(code, { bpm: air.track.bpm });
 
+  // radio fade: wind the volume down at the slot's tail, back up on the new
+  // track — the honest cousin of a crossfade with a single deck
+  const fadeState = useRef<{ fadedSlot: number; live: boolean }>({ fadedSlot: -1, live: false });
+  fadeState.current.live = tuned && playing;
+
   // the clock drives everything — recomputing also resyncs after background
   useEffect(() => {
-    const tick = () => setAir(radioAt(dial, nowSeconds()));
+    const tick = () => {
+      const next = radioAt(dial, nowSeconds());
+      setAir((prev) => {
+        if (fadeState.current.live) {
+          if (next.secondsLeft <= 4 && fadeState.current.fadedSlot !== next.slot) {
+            fadeState.current.fadedSlot = next.slot;
+            audioEngine.fadeTo(0.08, 3);
+          } else if (prev.slot !== next.slot) {
+            audioEngine.fadeTo(0.9, 1.5);
+          }
+        }
+        return next;
+      });
+    };
     tick();
     const interval = window.setInterval(tick, 1000);
     const onVisible = () => tick();
@@ -42,7 +61,11 @@ export default function FmView({ onRemix }: { onRemix: (code: string, bpm?: numb
   const mute = () => {
     setTuned(false);
     stop();
+    audioEngine.setVolume(0.9);
   };
+
+  // leaving the FM tab must not leave the master faded
+  useEffect(() => () => audioEngine.setVolume(0.9), []);
 
   const switchDial = (next: Dial) => {
     if (next === dial) return;

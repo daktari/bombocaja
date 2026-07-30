@@ -65,12 +65,16 @@ export function radioAt(dial: Dial, unixSeconds: number): OnAir {
     track = compose(styles[Math.floor(rng() * styles.length)], slot);
   }
 
-  // arrangement: fewer layers early in the slot, everything after
+  // arrangement: fewer layers early in the slot, everything after, and a
+  // wind-down at the end so the DJ cut lands on a thinner picture
   const progress = secondsIntoSlot / SLOT_SECONDS;
   const thresholds =
     track.states.length >= 3 ? [0.12, 0.3] : track.states.length === 2 ? [0.18] : [];
   let stateIndex = 0;
   for (const t of thresholds) if (progress >= t) stateIndex++;
+  if (progress >= 0.9 && track.states.length >= 2) {
+    stateIndex = track.states.length - 2; // outro: drop the decorations
+  }
 
   return {
     dial,
