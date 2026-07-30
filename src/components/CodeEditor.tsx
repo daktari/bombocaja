@@ -211,6 +211,7 @@ export default function CodeEditor({
         history(),
         drawSelection(),
         highlightActiveLine(),
+        EditorView.lineWrapping,
         flashField,
         language,
         syntaxHighlighting(highlight),
