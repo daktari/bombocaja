@@ -156,6 +156,19 @@ Los samples reales vienen de [Dirt-Samples](https://github.com/tidalcycles/Dirt-
 vez que se usan. Sin conexión, `bd` / `sn` / `hh` suenan con versiones
 sintetizadas de respaldo.
 
+## La radio: bakaluti FM 📻
+
+Pestaña **FM**: una emisora 24/7 que emite código, no audio. La programación
+es una función del reloj — todo el que sintoniza en el mismo momento oye el
+mismo tema, sin servidores, y la parrilla no se acaba nunca (cada bloque de
+150s siembra al compositor con su propio número). Dos diales: **bakaluti FM**
+(techno/house/ambient por franjas horarias) y **niebla FM** (ambient 24/7
+para trabajar). Cada 4 bloques suena un tema ancla curado de la casa, los
+temas evolucionan por dentro (entran capas, se despiden al final) y el botón
+**▸ remezclar esto** se lleva el tema sonante a tu editor. La calidad de lo
+generado la vigilan un linter musical (10.000 temas validados en los tests)
+y revisiones a ciegas de un agente crítico independiente.
+
 ## Aprender, guardar y compartir
 
 - **Learn**: curso de 10 lecciones progresivas (de "tu primer ritmo" a melodía

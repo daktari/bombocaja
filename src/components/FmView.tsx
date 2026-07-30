@@ -128,6 +128,28 @@ export default function FmView({ onRemix }: { onRemix: (code: string, bpm?: numb
       <main className="flex-1 p-5 md:p-7 relative overflow-y-auto min-w-0">
         <Visualizer />
         <div className="relative z-10 max-w-3xl">
+          {/* mobile dial */}
+          <div className="md:hidden flex gap-2 mb-4">
+            <button
+              onClick={() => switchDial("fm")}
+              className={
+                "flex-1 px-3 py-2 border text-[11px] uppercase tracking-widest transition-all " +
+                (dial === "fm" ? "border-acid text-acid bg-acid/5" : "border-white/15 text-fog")
+              }
+            >
+              bakaluti FM
+            </button>
+            <button
+              onClick={() => switchDial("niebla")}
+              className={
+                "flex-1 px-3 py-2 border text-[11px] uppercase tracking-widest transition-all " +
+                (dial === "niebla" ? "border-acid text-acid bg-acid/5" : "border-white/15 text-fog")
+              }
+            >
+              niebla FM
+            </button>
+          </div>
+
           <div className="flex items-center gap-2.5 text-[10px] uppercase tracking-[0.3em]">
             {live ? (
               <>
@@ -193,6 +215,10 @@ export default function FmView({ onRemix }: { onRemix: (code: string, bpm?: numb
               {t("fm.remix")}
             </button>
           </div>
+
+          <p className="md:hidden mt-4 text-[10px] uppercase tracking-wider text-fog">
+            {t("fm.next")}: {upNext.track.title} · {CHANNELS[upNext.track.style]}
+          </p>
 
           <p className="mt-6 text-[10px] text-fog/70 leading-relaxed max-w-md">{t("fm.note")}</p>
         </div>
