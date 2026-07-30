@@ -322,14 +322,16 @@ function niebla(rng: Rng): Sketch {
 
   if (archetype === "coral") {
     // three pad voices, unequal lengths — a chordal cloud, no melody at all
-    lowDrone(8, pick(rng, [2, 3]));
+    lowDrone(8, pick(rng, [2, 3])); // period 24 | 32 base steps
     const prog = pick(rng, [[0, 3, 5, 2], [0, 4, 2, 5], [0, 2, -2, 3]]);
     const progStr = prog
       .map((d, i) => (i === 2 && chance(rng, 0.5) ? `<${d} ${d + 2}>` : String(d)))
       .join(" ");
+    // mid period 16 | 40 — can never equal low (24|32) or high (20|28)
+    const [midSlow, midRests] = pick(rng, [[4, 3], [8, 4]] as [number, number][]);
     lanes.push({
       tier: 1,
-      line: `<${progStr}> ${"~ ".repeat(pick(rng, [3, 4])).trim()} | synth pad | scale ${scale} | slow ${pick(rng, [4, 8])} | delay ${rnum(rng, 0.3, 0.45)} | reverb ${rev} | gain ${rnum(rng, 0.42, 0.5)} -- bruma media`,
+      line: `<${progStr}> ${"~ ".repeat(midRests).trim()} | synth pad | scale ${scale} | slow ${midSlow} | delay ${rnum(rng, 0.3, 0.45)} | reverb ${rev} | gain ${rnum(rng, 0.42, 0.5)} -- bruma media`,
     });
     lanes.push({
       tier: 2,
@@ -343,7 +345,7 @@ function niebla(rng: Rng): Sketch {
     }
   } else if (archetype === "destello") {
     // minimal ground + a piano that actually SAYS something
-    lowDrone(pick(rng, [4, 8]), 2);
+    lowDrone(8, 2); // period 24 — the 11-13 step piano lanes can't collide
     const melodies = [
       "7 ~ 9 ~ <12 11> ~ ~ 7 ~ <5 9> ~ ~",
       "<9 7> ~ 12 ~ ~ <11 13> ~ 9 ~ ~ 7 ~",
