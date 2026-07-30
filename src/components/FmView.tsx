@@ -1,6 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { usePlayer } from "../lib/usePlayer";
 import { audioEngine } from "../lib/audioEngine";
+
+const CodeEditor = lazy(() => import("./CodeEditor"));
 import { radioAt, CHANNELS, SLOT_SECONDS, type Dial, type OnAir } from "../lib/radio";
 import Visualizer from "./Visualizer";
 import { t } from "../lib/i18n";
@@ -17,10 +19,22 @@ const mmss = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).
 export default function FmView({ onRemix }: { onRemix: (code: string, bpm?: number) => void }) {
   const [dial, setDial] = useState<Dial>("fm");
   const [tuned, setTuned] = useState(false);
+  const [vol, setVol] = useState(0.9);
   const [air, setAir] = useState<OnAir>(() => radioAt("fm", nowSeconds()));
+  const volRef = useRef(vol);
+  volRef.current = vol;
+
+  const flashFn = useRef<((from: number, to: number) => void) | null>(null);
+  const registerFlash = useCallback((fn: (from: number, to: number) => void) => {
+    flashFn.current = fn;
+  }, []);
 
   const code = air.track.states[Math.min(air.stateIndex, air.track.states.length - 1)];
-  const { playing, play, stop } = usePlayer(code, { bpm: air.track.bpm });
+  const { playing, play, stop } = usePlayer(code, {
+    bpm: air.track.bpm,
+    volume: vol,
+    onFlash: (from, to) => flashFn.current?.(from, to),
+  });
 
   // radio fade: wind the volume down at the slot's tail, back up on the new
   // track — the honest cousin of a crossfade with a single deck
@@ -35,9 +49,9 @@ export default function FmView({ onRemix }: { onRemix: (code: string, bpm?: numb
         if (fadeState.current.live) {
           if (next.secondsLeft <= 4 && fadeState.current.fadedSlot !== next.slot) {
             fadeState.current.fadedSlot = next.slot;
-            audioEngine.fadeTo(0.08, 3);
+            audioEngine.fadeTo(Math.max(0.05, volRef.current * 0.1), 3);
           } else if (prev.slot !== next.slot) {
-            audioEngine.fadeTo(0.9, 1.5);
+            audioEngine.fadeTo(volRef.current, 1.5);
           }
         }
         return next;
@@ -61,7 +75,7 @@ export default function FmView({ onRemix }: { onRemix: (code: string, bpm?: numb
   const mute = () => {
     setTuned(false);
     stop();
-    audioEngine.setVolume(0.9);
+    audioEngine.setVolume(volRef.current);
   };
 
   // leaving the FM tab must not leave the master faded
@@ -188,8 +202,18 @@ export default function FmView({ onRemix }: { onRemix: (code: string, bpm?: numb
             </span>
           </div>
 
-          <div className="mt-5 bg-black border border-acid/25 overflow-x-auto">
-            <pre className="px-4 py-3 text-[13px] leading-relaxed text-acid">{code}</pre>
+          <div className="mt-5 h-56 bg-black border border-acid/25 overflow-hidden">
+            <Suspense
+              fallback={<pre className="px-4 py-3 text-[13px] leading-relaxed text-acid">{code}</pre>}
+            >
+              <CodeEditor
+                value={code}
+                onChange={() => {}}
+                readOnly
+                registerFlash={registerFlash}
+                className="h-full"
+              />
+            </Suspense>
           </div>
 
           <div className="flex items-center gap-2.5 flex-wrap mt-5">
@@ -208,6 +232,18 @@ export default function FmView({ onRemix }: { onRemix: (code: string, bpm?: numb
                 {t("fm.tune")}
               </button>
             )}
+            <label className="flex items-center gap-2 px-3 py-2 bg-black border border-mag/30 text-[10px] uppercase tracking-widest text-fog select-none">
+              vol
+              <input
+                type="range"
+                min={0}
+                max={1}
+                step={0.01}
+                value={vol}
+                onChange={(e) => setVol(Number(e.target.value))}
+                className="w-24 accent-mag"
+              />
+            </label>
             <button
               onClick={() => onRemix(air.track.code, air.track.bpm)}
               className="ml-auto px-5 py-2 text-xs font-bold uppercase tracking-widest border border-mag text-mag hover:bg-mag hover:text-black transition-all"

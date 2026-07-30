@@ -14,6 +14,20 @@ describe("composer", () => {
     }
   });
 
+  it("niebla: pad-lane periods never coincide — the drift is guaranteed", () => {
+    for (let seed = 1; seed <= 300; seed++) {
+      const track = compose("niebla", seed * 17 + 1);
+      const lines = track.code.split("\n");
+      const periods = parsePattern(track.code)
+        .lanes.map((lane, i) => ({ lane, line: lines[i] }))
+        .filter(({ line }) => line.includes("synth pad"))
+        .map(({ lane }) => Math.round(lane.steps.length / lane.speed));
+      expect(new Set(periods).size, `seed ${seed}: periodos ${periods.join(",")}`).toBe(
+        periods.length
+      );
+    }
+  });
+
   it("niebla: seeds produce structurally different tracks, not decimal jitter", () => {
     const signatures = new Set(
       Array.from({ length: 40 }, (_, i) => {

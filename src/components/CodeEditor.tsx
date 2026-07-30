@@ -7,7 +7,7 @@ import {
   drawSelection,
   type DecorationSet,
 } from "@codemirror/view";
-import { StateEffect, StateField } from "@codemirror/state";
+import { EditorState, StateEffect, StateField } from "@codemirror/state";
 import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
 import { StreamLanguage, syntaxHighlighting, HighlightStyle } from "@codemirror/language";
 import {
@@ -187,6 +187,8 @@ interface Props {
   className?: string;
   /** Receives a fn that flashes a [from, to) range when its token sounds. */
   registerFlash?: (flash: (from: number, to: number) => void) => void;
+  /** Display-only mode (the FM console shows the score without editing). */
+  readOnly?: boolean;
 }
 
 /** CodeMirror 6 wrapper. Ctrl/Cmd+Enter plays, Ctrl/Cmd+. stops. */
@@ -197,6 +199,7 @@ export default function CodeEditor({
   onStop,
   className,
   registerFlash,
+  readOnly = false,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
@@ -208,6 +211,7 @@ export default function CodeEditor({
       doc: value,
       parent: containerRef.current!,
       extensions: [
+        ...(readOnly ? [EditorState.readOnly.of(true), EditorView.editable.of(false)] : []),
         history(),
         drawSelection(),
         highlightActiveLine(),
