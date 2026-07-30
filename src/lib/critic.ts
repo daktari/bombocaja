@@ -43,7 +43,7 @@ const RULES: Record<StyleName, StyleRules> = {
   casa: { bpm: [122, 126], lanes: [5, 7], kickAnchors: true, maxSwing: 0.5, requiresSwing: true },
   niebla: {
     bpm: [60, 75],
-    lanes: [3, 6],
+    lanes: [2, 6],
     kickAnchors: false,
     maxSwing: 0.3,
     minSilence: 0.45,
