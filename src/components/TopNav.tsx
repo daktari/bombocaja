@@ -4,12 +4,7 @@ import Rich from "./Rich";
 
 export type Tab = "editor" | "fm" | "learn" | "library";
 
-const TABS: { id: Tab; label: string }[] = [
-  { id: "editor", label: "Editor" },
-  { id: "fm", label: "FM" },
-  { id: "learn", label: "Learn" },
-  { id: "library", label: "Library" },
-];
+const TABS: Tab[] = ["editor", "fm", "learn", "library"];
 
 const LINKS = [
   { label: "strudel.cc", href: "https://strudel.cc" },
@@ -31,18 +26,18 @@ export default function TopNav({ tab, onChange }: { tab: Tab; onChange: (t: Tab)
         <span className="text-acid blink">▮</span>
       </div>
       <nav className="flex gap-1 text-xs">
-        {TABS.map((t) => (
+        {TABS.map((id) => (
           <button
-            key={t.id}
-            onClick={() => onChange(t.id)}
+            key={id}
+            onClick={() => onChange(id)}
             className={
               "px-3 py-1.5 uppercase tracking-widest transition-colors " +
-              (tab === t.id
+              (tab === id
                 ? "bg-acid text-black font-bold"
                 : "text-fog hover:text-acid hover:bg-acid/10")
             }
           >
-            {t.label}
+            {t(`nav.${id}`)}
           </button>
         ))}
       </nav>
