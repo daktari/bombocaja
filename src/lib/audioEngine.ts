@@ -301,6 +301,17 @@ class AudioEngine {
     }
   }
 
+  /** Smooth linear fade — the station's transition between tracks. */
+  fadeTo(volume: number, seconds: number) {
+    this.volume = volume;
+    if (this.master && this.ctx) {
+      const gain = this.master.gain;
+      gain.cancelScheduledValues(this.ctx.currentTime);
+      gain.setValueAtTime(gain.value, this.ctx.currentTime);
+      gain.linearRampToValueAtTime(volume, this.ctx.currentTime + seconds);
+    }
+  }
+
   setLaneGains(gains: number[]) {
     this.laneGains = gains;
     this.chains.forEach((chain, i) => {
