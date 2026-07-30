@@ -22,12 +22,12 @@ export const CHANNELS: Record<StyleName, string> = {
 
 /** UTC-hour programming for the main dial. */
 function franjaStyles(hourUtc: number): StyleName[] {
-  if (hourUtc >= 6 && hourUtc < 10) return ["niebla", "casa"];
-  if (hourUtc >= 10 && hourUtc < 14) return ["casa", "motor"];
-  if (hourUtc >= 14 && hourUtc < 18) return ["motor", "casa"];
-  if (hourUtc >= 18 && hourUtc < 22) return ["motor", "oxido"];
-  if (hourUtc >= 22 || hourUtc < 2) return ["oxido", "motor"];
-  return ["oxido", "niebla"]; // 02–06: la madrugada
+  if (hourUtc >= 6 && hourUtc < 10) return ["niebla", "casa", "motor"];
+  if (hourUtc >= 10 && hourUtc < 14) return ["casa", "motor", "niebla"];
+  if (hourUtc >= 14 && hourUtc < 18) return ["motor", "casa", "oxido"];
+  if (hourUtc >= 18 && hourUtc < 22) return ["oxido", "motor", "casa"];
+  if (hourUtc >= 22 || hourUtc < 2) return ["oxido", "motor", "niebla"];
+  return ["oxido", "niebla", "motor"]; // 02–06: la madrugada
 }
 
 export interface OnAir {
