@@ -3,6 +3,7 @@ import TopNav, { type Tab } from "./components/TopNav";
 import EditorView, { DEFAULT_CODE } from "./components/EditorView";
 import LearnView from "./components/LearnView";
 import LibraryView from "./components/LibraryView";
+import FmView from "./components/FmView";
 import { sharedFromHash } from "./lib/share";
 import { DEFAULT_BPM } from "./lib/audioEngine";
 import { HERO_CODE } from "./lib/gallery";
@@ -43,6 +44,7 @@ export default function App() {
             onBpmChange={setBpm}
           />
         )}
+        {tab === "fm" && <FmView onRemix={openInEditor} />}
         {tab === "learn" && <LearnView />}
         {tab === "library" && <LibraryView onLoad={openInEditor} />}
       </main>

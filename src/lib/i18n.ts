@@ -161,6 +161,21 @@ const ES: Record<string, string> = {
   "about.license": "Código abierto bajo licencia AGPL-3.0.",
   "about.close": "✕ Cerrar",
 
+  "fm.dial": "Dial",
+  "fm.dialFmDesc": "la programación por franjas",
+  "fm.dialNieblaDesc": "ambient 24/7 para trabajar",
+  "fm.next": "A continuación",
+  "fm.in": "en",
+  "fm.live": "en directo",
+  "fm.off": "sin sintonizar",
+  "fm.tune": "▶ Sintonizar",
+  "fm.mute": "■ Silenciar",
+  "fm.remix": "▸ Remezclar esto",
+  "fm.anchor": "tema de la casa",
+  "fm.left": "quedan",
+  "fm.note":
+    "La emisión es una función del reloj: todo el que sintoniza ahora oye este mismo tema, sin servidores. Si te gusta, remézclalo — el directo sigue para los demás.",
+
   "err.title": "Algo se ha roto",
   "err.body": "No eres tú, somos nosotros. Tus ritmos guardados y tu progreso están a salvo.",
   "err.reload": "↺ Recargar",
@@ -304,6 +319,21 @@ const EN: Record<string, string> = {
     "No accounts, no cookies, no servers. Your beats, your progress and your voice live only in your browser and never leave it.",
   "about.license": "Open source under the AGPL-3.0 license.",
   "about.close": "✕ Close",
+
+  "fm.dial": "Dial",
+  "fm.dialFmDesc": "programming by time of day",
+  "fm.dialNieblaDesc": "ambient 24/7 for working",
+  "fm.next": "Up next",
+  "fm.in": "in",
+  "fm.live": "on air",
+  "fm.off": "not tuned in",
+  "fm.tune": "▶ Tune in",
+  "fm.mute": "■ Mute",
+  "fm.remix": "▸ Remix this",
+  "fm.anchor": "house track",
+  "fm.left": "left",
+  "fm.note":
+    "The broadcast is a function of the clock: everyone tuning in right now hears this same track, with no servers. Like it? Remix it — the live feed goes on for everyone else.",
 
   "err.title": "Something broke",
   "err.body": "It's not you, it's us. Your saved beats and progress are safe.",
