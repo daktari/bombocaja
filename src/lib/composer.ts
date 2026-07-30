@@ -61,6 +61,14 @@ function riff(rng: Rng, template: string, root: number, others: number[]): strin
     .replace(/X|Y/g, () => String(pick(rng, others)));
 }
 
+/** a one-token lane with the voice placed at `lead` (voices interleave
+ *  instead of all hitting at position 0 of their loops) */
+function offsetLane(token: string, lead: number, length: number): string {
+  const slots = Array(length).fill("~");
+  slots[Math.min(lead, length - 1)] = token;
+  return slots.join(" ");
+}
+
 /** a lane of `length` slots with `hits` tokens scattered (odd-meter perc) */
 function sparse(rng: Rng, token: string, length: number, hits: number): string {
   const slots = Array(length).fill("~");
@@ -325,7 +333,7 @@ function niebla(rng: Rng): Sketch {
     });
     lanes.push({
       tier: 2,
-      line: `<${pick(rng, [7, 9])} ${pick(rng, [11, 12])}>${chance(rng, 0.35) ? "?" : ""} ${"~ ".repeat(pick(rng, [4, 5, 6])).trim()} | synth pad | scale ${scale} | slow 4 | reverb ${rev} | pan ${span(rng, 0.25, 0.5)} | gain ${rnum(rng, 0.3, 0.38)} -- bruma alta`,
+      line: `${offsetLane(`<${pick(rng, [7, 9])} ${pick(rng, [11, 12])}>${chance(rng, 0.35) ? "?" : ""}`, rint(rng, 1, 3), pick(rng, [5, 7]))} | synth pad | scale ${scale} | slow 4 | reverb ${rev} | pan ${span(rng, 0.25, 0.5)} | gain ${rnum(rng, 0.3, 0.38)} -- bruma alta, desplazada`,
     });
     if (chance(rng, 0.4)) {
       lanes.push({
@@ -361,7 +369,7 @@ function niebla(rng: Rng): Sketch {
       .join(" ");
     lanes.push({
       tier: 1,
-      line: `<${progStr}> ${"~ ".repeat(pick(rng, [4, 5])).trim()} | synth pad | scale ${scale} | slow 4 | delay ${rnum(rng, 0.3, 0.5)} | reverb ${rev} | gain ${rnum(rng, 0.45, 0.55)} -- bruma`,
+      line: `${offsetLane(`<${progStr}>`, rint(rng, 1, 2), pick(rng, [5, 6]))} | synth pad | scale ${scale} | slow 4 | delay ${rnum(rng, 0.3, 0.5)} | reverb ${rev} | gain ${rnum(rng, 0.45, 0.55)} -- bruma, desplazada`,
     });
     lanes.push({
       tier: 2,
@@ -372,19 +380,25 @@ function niebla(rng: Rng): Sketch {
       line: `bd ${"~ ".repeat(7).trim()} | lpf ${rint(rng, 200, 300)} | reverb ${rnum(rng, 0.3, 0.4)} | gain ${rnum(rng, 0.45, 0.55)} -- latido enterrado`,
     });
   } else {
-    // marea: texture over melody — breaths and soft distant percussion
-    lowDrone(8, pick(rng, [2, 3]));
+    // marea: interleaved swells over uneven distant ticks.
+    // Periods measured in BASE steps must never coincide: suelo = len×8
+    // (24|40), bruma = len×4 (20|28) — no combination collides, so the
+    // two voices drift forever instead of hitting together.
+    lowDrone(8, pick(rng, [2, 4]));
+    const chord = `<0 <${pick(rng, [2, 4])} ${pick(rng, [5, 7])}>>`;
     lanes.push({
       tier: 1,
-      line: `<0 <${pick(rng, [2, 4])} ${pick(rng, [5, 7])}>> ${"~ ".repeat(pick(rng, [5, 6])).trim()} | synth pad | scale ${scale} | slow 4 | delay ${rnum(rng, 0.35, 0.5)} | reverb ${rev} | gain ${rnum(rng, 0.42, 0.5)} -- bruma`,
+      line: `${offsetLane(chord, rint(rng, 1, 2), pick(rng, [5, 7]))} | synth pad | scale ${scale} | slow 4 | delay ${rnum(rng, 0.35, 0.5)} | reverb ${rev} | gain ${rnum(rng, 0.42, 0.5)} -- bruma, desplazada`,
     });
+    const hoPan = span(rng, 0.25, 0.5);
     lanes.push({
       tier: 2,
-      line: `ho ${"~ ".repeat(pick(rng, [4, 5])).trim()} | lpf ${rint(rng, 400, 600)} | pan ${span(rng, 0.25, 0.5)} | gain 0.2 -- aliento`,
+      line: `${offsetLane("ho", rint(rng, 0, 2), pick(rng, [5, 7]))} | lpf ${rint(rng, 400, 600)} | pan ${hoPan} | gain 0.2 -- aliento`,
     });
+    const [gk, gn] = pick(rng, [[3, 16], [2, 13], [3, 14]] as [number, number][]);
     lanes.push({
       tier: 3,
-      line: `rm(${pick(rng, [2, 3])},${pick(rng, [12, 16])}) | lpf ${rint(rng, 700, 1000)} | delay ${rnum(rng, 0.4, 0.55)} | pan ${span(rng, 0.2, 0.4)} | gain ${rnum(rng, 0.16, 0.22)} -- gotas lejanas`,
+      line: `rm(${gk},${gn}) | lpf ${rint(rng, 700, 1000)} | delay ${rnum(rng, 0.4, 0.55)} | pan ${(-Math.sign(hoPan) * rnum(rng, 0.2, 0.4)).toFixed(2)} | gain ${rnum(rng, 0.16, 0.22)} -- gotas irregulares, al otro lado`,
     });
   }
 
