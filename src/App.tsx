@@ -4,7 +4,7 @@ import EditorView, { DEFAULT_CODE } from "./components/EditorView";
 import LearnView from "./components/LearnView";
 import LibraryView from "./components/LibraryView";
 import FmView from "./components/FmView";
-import { sharedFromHash } from "./lib/share";
+import { momentFromHash, sharedFromHash } from "./lib/share";
 import { DEFAULT_BPM } from "./lib/audioEngine";
 import { HERO_CODE } from "./lib/gallery";
 
@@ -13,14 +13,17 @@ const VISITED_KEY = "bombocaja.visited";
 
 // A shared pattern in the URL (#p=…) opens directly in the editor, at its tempo.
 const SHARED = typeof location !== "undefined" ? sharedFromHash() : null;
+// A shared FM moment (#fm=…&t=…) opens the station in replay mode.
+const MOMENT = typeof location !== "undefined" ? momentFromHash() : null;
 
 export default function App() {
   // First visit lands straight in the editor with the welcome pattern loaded.
   const [editorCode, setEditorCode] = useState<string>(
     () => SHARED?.code ?? (localStorage.getItem(VISITED_KEY) ? DEFAULT_CODE : HERO_CODE)
   );
-  const [tab, setTab] = useState<Tab>("editor");
+  const [tab, setTab] = useState<Tab>(MOMENT ? "fm" : "editor");
   const [bpm, setBpm] = useState(SHARED?.bpm ?? DEFAULT_BPM);
+  const [moment, setMoment] = useState(MOMENT);
 
   useEffect(() => {
     localStorage.setItem(VISITED_KEY, "1");
@@ -44,7 +47,9 @@ export default function App() {
             onBpmChange={setBpm}
           />
         )}
-        {tab === "fm" && <FmView onRemix={openInEditor} />}
+        {tab === "fm" && (
+          <FmView onRemix={openInEditor} moment={moment} onClearMoment={() => setMoment(null)} />
+        )}
         {tab === "learn" && <LearnView />}
         {tab === "library" && <LibraryView onLoad={openInEditor} />}
       </main>

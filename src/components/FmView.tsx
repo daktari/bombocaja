@@ -3,24 +3,39 @@ import { usePlayer } from "../lib/usePlayer";
 import { audioEngine } from "../lib/audioEngine";
 
 const CodeEditor = lazy(() => import("./CodeEditor"));
-import { radioAt, CHANNELS, SLOT_SECONDS, type Dial, type OnAir } from "../lib/radio";
+import { radioAt, CHANNELS, SLOT_SECONDS, ID_SECONDS, type Dial, type OnAir } from "../lib/radio";
+import { momentUrl, type SharedMoment } from "../lib/share";
 import Visualizer from "./Visualizer";
-import { t } from "../lib/i18n";
+import { getLang, t } from "../lib/i18n";
 
 const nowSeconds = () => Math.floor(Date.now() / 1000);
 const mmss = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
+
+interface Props {
+  onRemix: (code: string, bpm?: number) => void;
+  /** an #fm=…&t=… link: open in replay mode at that historical moment */
+  moment?: SharedMoment | null;
+  onClearMoment?: () => void;
+}
 
 /**
  * The station console. The broadcast is a pure function of the clock:
  * every listener computes the same track for the same moment. Tuning in
  * starts the engine; slot and arrangement changes flow through the live
- * pattern update, so transitions are seamless DJ cuts.
+ * pattern update, so transitions are seamless DJ cuts. Because the clock
+ * is the only input, a shared moment link (dial + unix second) replays
+ * the past broadcast exactly — time travel without a single recording.
  */
-export default function FmView({ onRemix }: { onRemix: (code: string, bpm?: number) => void }) {
-  const [dial, setDial] = useState<Dial>("fm");
+export default function FmView({ onRemix, moment, onClearMoment }: Props) {
+  const [dial, setDial] = useState<Dial>(moment?.dial ?? "fm");
   const [tuned, setTuned] = useState(false);
   const [vol, setVol] = useState(0.9);
-  const [air, setAir] = useState<OnAir>(() => radioAt("fm", nowSeconds()));
+  /** seconds between the listened broadcast and the wall clock (0 = live) */
+  const [offset, setOffset] = useState(() => (moment ? moment.t - nowSeconds() : 0));
+  const [notice, setNotice] = useState<string | null>(null);
+  const [air, setAir] = useState<OnAir>(() =>
+    radioAt(moment?.dial ?? "fm", moment ? moment.t : nowSeconds())
+  );
   const volRef = useRef(vol);
   volRef.current = vol;
 
@@ -44,7 +59,7 @@ export default function FmView({ onRemix }: { onRemix: (code: string, bpm?: numb
   // the clock drives everything — recomputing also resyncs after background
   useEffect(() => {
     const tick = () => {
-      const next = radioAt(dial, nowSeconds());
+      const next = radioAt(dial, nowSeconds() + offset);
       setAir((prev) => {
         if (fadeState.current.live) {
           if (next.secondsLeft <= 4 && fadeState.current.fadedSlot !== next.slot) {
@@ -65,7 +80,7 @@ export default function FmView({ onRemix }: { onRemix: (code: string, bpm?: numb
       window.clearInterval(interval);
       document.removeEventListener("visibilitychange", onVisible);
     };
-  }, [dial]);
+  }, [dial, offset]);
 
   const tune = () => {
     setTuned(true);
@@ -84,11 +99,31 @@ export default function FmView({ onRemix }: { onRemix: (code: string, bpm?: numb
   const switchDial = (next: Dial) => {
     if (next === dial) return;
     setDial(next);
-    setAir(radioAt(next, nowSeconds()));
+    setAir(radioAt(next, nowSeconds() + offset));
   };
 
-  const upNext = radioAt(dial, (air.slot + 1) * SLOT_SECONDS + 1);
+  const backToLive = () => {
+    setOffset(0);
+    onClearMoment?.();
+    // a reload must not re-enter the replay
+    history.replaceState(null, "", location.pathname + location.search);
+    setAir(radioAt(dial, nowSeconds()));
+  };
+
+  const shareMoment = async () => {
+    await navigator.clipboard.writeText(momentUrl(dial, nowSeconds() + offset));
+    setNotice(t("fm.momentCopied"));
+    window.setTimeout(() => setNotice(null), 2200);
+  };
+
+  // preview past the next slot's ID window, so it names the actual track
+  const upNext = radioAt(dial, (air.slot + 1) * SLOT_SECONDS + ID_SECONDS + 1);
   const live = tuned && playing;
+  const replaying = offset !== 0;
+  const airDate = new Date((nowSeconds() + offset) * 1000).toLocaleString(
+    getLang() === "es" ? "es-ES" : "en-GB",
+    { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }
+  );
 
   return (
     <div className="flex flex-1 min-h-0">
@@ -164,11 +199,31 @@ export default function FmView({ onRemix }: { onRemix: (code: string, bpm?: numb
             </button>
           </div>
 
+          {replaying && (
+            <div className="flex items-center gap-3 mb-4 px-3 py-2 border border-mag/50 text-[10px] uppercase tracking-widest">
+              <span className="text-mag blink">◉ {t("fm.replay")}</span>
+              <span className="text-fog normal-case tracking-normal">{airDate}</span>
+              <button
+                onClick={backToLive}
+                className="ml-auto px-3 py-1 border border-acid/60 text-acid hover:bg-acid hover:text-black transition-all"
+              >
+                ● {t("fm.backLive")}
+              </button>
+            </div>
+          )}
+
           <div className="flex items-center gap-2.5 text-[10px] uppercase tracking-[0.3em]">
             {live ? (
               <>
-                <span className="w-2.5 h-2.5 bg-acid blink shadow-[0_0_10px_#c8ff00]" />
-                <span className="text-acid">{t("fm.live")}</span>
+                <span
+                  className={
+                    "w-2.5 h-2.5 blink " +
+                    (replaying ? "bg-mag shadow-[0_0_10px_#ff3ea5]" : "bg-acid shadow-[0_0_10px_#c8ff00]")
+                  }
+                />
+                <span className={replaying ? "text-mag" : "text-acid"}>
+                  {replaying ? t("fm.replay") : t("fm.live")}
+                </span>
               </>
             ) : (
               <span className="text-fog">{t("fm.off")}</span>
@@ -180,9 +235,13 @@ export default function FmView({ onRemix }: { onRemix: (code: string, bpm?: numb
             {air.track.title}
           </h1>
           <div className="flex gap-2 flex-wrap text-[10px] uppercase tracking-widest">
-            <span className="px-2.5 py-1 border border-mag/50 text-mag">
-              {CHANNELS[air.track.style]}
-            </span>
+            {air.isStationId ? (
+              <span className="px-2.5 py-1 border border-acid/60 text-acid blink">{t("fm.id")}</span>
+            ) : (
+              <span className="px-2.5 py-1 border border-mag/50 text-mag">
+                {CHANNELS[air.track.style]}
+              </span>
+            )}
             <span className="px-2.5 py-1 border border-acid/40 led">{air.track.bpm} bpm</span>
             {air.isAnchor && (
               <span className="px-2.5 py-1 border border-white/15 text-fog">{t("fm.anchor")}</span>
@@ -245,12 +304,19 @@ export default function FmView({ onRemix }: { onRemix: (code: string, bpm?: numb
               />
             </label>
             <button
+              onClick={() => void shareMoment()}
+              className="px-4 py-2 text-xs uppercase tracking-widest border border-acid/50 text-acid hover:bg-acid hover:text-black transition-all"
+            >
+              ◉ {t("fm.moment")}
+            </button>
+            <button
               onClick={() => onRemix(air.track.code, air.track.bpm)}
               className="ml-auto px-5 py-2 text-xs font-bold uppercase tracking-widest border border-mag text-mag hover:bg-mag hover:text-black transition-all"
             >
               {t("fm.remix")}
             </button>
           </div>
+          {notice && <p className="mt-2 text-[10px] text-acid">{notice}</p>}
 
           <p className="md:hidden mt-4 text-[10px] uppercase tracking-wider text-fog">
             {t("fm.next")}: {upNext.track.title} · {CHANNELS[upNext.track.style]}
