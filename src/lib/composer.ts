@@ -131,25 +131,34 @@ function motor(rng: Rng): Sketch {
   ];
   const root = pick(rng, [0, 0, 0, -2]);
   lanes.push({
-    tier: 2,
+    // half the intros open kick+bass instead of always kick+clap
+    tier: chance(rng, 0.5) ? 1 : 2,
     line: `${riff(rng, pick(rng, bassTemplates), root, [3, 5, 7, -2].filter((d) => d !== root))} | synth bass | scale menor${groove > 0 ? ` | swing ${groove}` : ""} | gain ${rnum(rng, 0.65, 0.75)} -- bajo funk`,
   });
 
-  // real 4-position progression, two parallel voices
+  // 4-position progression with a two-level twist: the last chord resolves
+  // differently every other pass — the harmonic cycle stops photocopying
   const prog = pick(rng, [
     [0, 3, 5, 2],
     [0, -2, 3, 2],
     [0, 5, 3, -2],
     [3, 2, 0, -2],
   ]);
+  const nestLast = chance(rng, 0.5);
+  const voice = (offset: number) =>
+    prog
+      .map((d, i) =>
+        i === 3 && nestLast ? `<${d + offset} ${d + offset - 2}>` : String(d + offset)
+      )
+      .join(" ");
   const rev = rnum(rng, 0.5, 0.6);
   lanes.push({
     tier: 2,
-    line: `<${prog.join(" ")}> ~ ~ ~ | synth pad | scale menor | slow 2 | reverb ${rev} | gain ${rnum(rng, 0.5, 0.6)} -- cuerdas: progresión`,
+    line: `<${voice(0)}> ~ ~ ~ | synth pad | scale menor | slow 2 | reverb ${rev} | gain ${rnum(rng, 0.5, 0.6)} -- cuerdas: progresión`,
   });
   lanes.push({
     tier: 3,
-    line: `<${prog.map((d) => d + 2).join(" ")}> ~ ~ ~ | synth pad | scale menor | slow 2 | reverb ${rev} | gain ${rnum(rng, 0.35, 0.42)} -- cuerdas: armonía`,
+    line: `<${voice(2)}> ~ ~ ~ | synth pad | scale menor | slow 2 | reverb ${rev} | gain ${rnum(rng, 0.35, 0.42)} -- cuerdas: armonía`,
   });
 
   // detail voice: sparse piano or a distant acid line
@@ -277,7 +286,8 @@ function casa(rng: Rng): Sketch {
   ];
   const root = pick(rng, [0, 0, 3]);
   lanes.push({
-    tier: 2,
+    // some intros open kick+bass — the house classic
+    tier: chance(rng, 0.4) ? 1 : 2,
     line: `${riff(rng, pick(rng, bassTemplates), root, [4, 7, root + 4])} | synth bass | scale mayor | swing ${groove} | gain ${rnum(rng, 0.65, 0.72)} -- bajo saltarín`,
   });
 
@@ -289,9 +299,12 @@ function casa(rng: Rng): Sketch {
   ]);
   const sparkleDelay = rnum(rng, 0.45, 0.55);
   const sparklePan = span(rng, 0.2, 0.4);
+  const sparkleProg = prog
+    .map((d, i) => (i === 3 && chance(rng, 0.5) ? `<${d} ${d + 2}>` : String(d)))
+    .join(" ");
   lanes.push({
     tier: 3,
-    line: `~ <${prog.join(" ")}> ~ ~ <${pick(rng, [11, 12, 14])} ~> ~ ~ ~ | synth piano | scale mayor | delay ${sparkleDelay} | pan ${sparklePan} | gain ${rnum(rng, 0.4, 0.48)} -- pianito con eco`,
+    line: `~ <${sparkleProg}> ~ ~ <${pick(rng, [11, 12, 14])} ~> ~ ~ ~ | synth piano | scale mayor | delay ${sparkleDelay} | pan ${sparklePan} | gain ${rnum(rng, 0.4, 0.48)} -- pianito con eco`,
   });
   // …and half the time a parallel third turns it into a proper house stab
   if (chance(rng, 0.5)) {
