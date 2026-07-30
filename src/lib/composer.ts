@@ -316,13 +316,16 @@ function niebla(rng: Rng): Sketch {
     // three pad voices, unequal lengths — a chordal cloud, no melody at all
     lowDrone(8, pick(rng, [2, 3]));
     const prog = pick(rng, [[0, 3, 5, 2], [0, 4, 2, 5], [0, 2, -2, 3]]);
+    const progStr = prog
+      .map((d, i) => (i === 2 && chance(rng, 0.5) ? `<${d} ${d + 2}>` : String(d)))
+      .join(" ");
     lanes.push({
       tier: 1,
-      line: `<${prog.join(" ")}> ${"~ ".repeat(pick(rng, [3, 4])).trim()} | synth pad | scale ${scale} | slow 4 | delay ${rnum(rng, 0.3, 0.45)} | reverb ${rev} | gain ${rnum(rng, 0.42, 0.5)} -- bruma media`,
+      line: `<${progStr}> ${"~ ".repeat(pick(rng, [3, 4])).trim()} | synth pad | scale ${scale} | slow ${pick(rng, [4, 8])} | delay ${rnum(rng, 0.3, 0.45)} | reverb ${rev} | gain ${rnum(rng, 0.42, 0.5)} -- bruma media`,
     });
     lanes.push({
       tier: 2,
-      line: `<${pick(rng, [7, 9])} ${pick(rng, [11, 12])}> ${"~ ".repeat(pick(rng, [4, 5, 6])).trim()} | synth pad | scale ${scale} | slow 4 | reverb ${rev} | pan ${span(rng, 0.25, 0.5)} | gain ${rnum(rng, 0.3, 0.38)} -- bruma alta`,
+      line: `<${pick(rng, [7, 9])} ${pick(rng, [11, 12])}>${chance(rng, 0.35) ? "?" : ""} ${"~ ".repeat(pick(rng, [4, 5, 6])).trim()} | synth pad | scale ${scale} | slow 4 | reverb ${rev} | pan ${span(rng, 0.25, 0.5)} | gain ${rnum(rng, 0.3, 0.38)} -- bruma alta`,
     });
     if (chance(rng, 0.4)) {
       lanes.push({
@@ -353,9 +356,12 @@ function niebla(rng: Rng): Sketch {
     // the classic: ground + drifting bruma + sparse sparkles + heartbeat
     lowDrone(4, 3);
     const prog = pick(rng, [[0, 3, 5, 2], [0, 2, -2, 3]]);
+    const progStr = prog
+      .map((d, i) => (i === 1 && chance(rng, 0.5) ? `<${d} ${d - 2}>` : String(d)))
+      .join(" ");
     lanes.push({
       tier: 1,
-      line: `<${prog.join(" ")}> ${"~ ".repeat(pick(rng, [4, 5])).trim()} | synth pad | scale ${scale} | slow 4 | delay ${rnum(rng, 0.3, 0.5)} | reverb ${rev} | gain ${rnum(rng, 0.45, 0.55)} -- bruma`,
+      line: `<${progStr}> ${"~ ".repeat(pick(rng, [4, 5])).trim()} | synth pad | scale ${scale} | slow 4 | delay ${rnum(rng, 0.3, 0.5)} | reverb ${rev} | gain ${rnum(rng, 0.45, 0.55)} -- bruma`,
     });
     lanes.push({
       tier: 2,
@@ -370,7 +376,7 @@ function niebla(rng: Rng): Sketch {
     lowDrone(8, pick(rng, [2, 3]));
     lanes.push({
       tier: 1,
-      line: `<0 ${pick(rng, [2, 4])}> ${"~ ".repeat(pick(rng, [5, 6])).trim()} | synth pad | scale ${scale} | slow 4 | delay ${rnum(rng, 0.35, 0.5)} | reverb ${rev} | gain ${rnum(rng, 0.42, 0.5)} -- bruma`,
+      line: `<0 <${pick(rng, [2, 4])} ${pick(rng, [5, 7])}>> ${"~ ".repeat(pick(rng, [5, 6])).trim()} | synth pad | scale ${scale} | slow 4 | delay ${rnum(rng, 0.35, 0.5)} | reverb ${rev} | gain ${rnum(rng, 0.42, 0.5)} -- bruma`,
     });
     lanes.push({
       tier: 2,

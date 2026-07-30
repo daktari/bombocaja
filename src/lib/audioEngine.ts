@@ -753,15 +753,17 @@ class AudioEngine {
     osc.stop(time + end + 0.03);
   }
 
-  /** Two detuned saws, slow attack, sustains for the step then releases. */
+  /** Two detuned saws. The envelope scales with the note: short notes get
+   *  string-like swells, long ambient notes EMERGE instead of hitting —
+   *  and long releases overlap into near-continuous texture. */
   private playPad(io: LaneIO, freq: number, time: number, duration: number) {
     const { ctx, dest } = io;
     const filter = ctx.createBiquadFilter();
     filter.type = "lowpass";
     filter.frequency.value = 1400;
     const g = ctx.createGain();
-    const attack = Math.min(0.15, duration * 0.4);
-    const release = 0.6;
+    const attack = Math.min(1.4, Math.max(0.08, duration * 0.45));
+    const release = Math.min(2.5, Math.max(0.6, duration * 0.7));
     g.gain.setValueAtTime(0, time);
     g.gain.linearRampToValueAtTime(0.22, time + attack);
     g.gain.setValueAtTime(0.22, time + duration);
