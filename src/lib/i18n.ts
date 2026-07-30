@@ -30,6 +30,10 @@ export function pick(l: Localized): string {
 
 const ES: Record<string, string> = {
   "nav.tagline": "juega con sonido",
+  "nav.editor": "Editor",
+  "nav.fm": "FM",
+  "nav.learn": "Aprende",
+  "nav.library": "Archivo",
 
   "grid.empty": "Escribe un patrón para ver los pasos…",
   "grid.laneVol": "volumen de esta línea",
@@ -38,7 +42,7 @@ const ES: Record<string, string> = {
   "ed.save": "+ Guardar",
   "ed.share": "↗ Compartir",
   "ed.savePlaceholder": "nombre del ritmo…",
-  "ed.saved": "guardado en Library ✓",
+  "ed.saved": "guardado en Archivo ✓",
   "ed.copied": "enlace copiado ✓",
   "ed.exported": "wav descargado ✓",
   "ed.exportError": "error: no se pudo exportar",
@@ -190,6 +194,10 @@ const ES: Record<string, string> = {
 
 const EN: Record<string, string> = {
   "nav.tagline": "play with sound",
+  "nav.editor": "Editor",
+  "nav.fm": "FM",
+  "nav.learn": "Learn",
+  "nav.library": "Library",
 
   "grid.empty": "Write a pattern to see the steps…",
   "grid.laneVol": "this line's volume",
