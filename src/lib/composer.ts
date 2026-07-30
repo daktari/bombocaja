@@ -317,7 +317,7 @@ function niebla(rng: Rng): Sketch {
   const lowDrone = (slowVal: number, extraRests: number) =>
     lanes.push({
       tier: 1,
-      line: `<-7 ${pick(rng, ["-5", "-4", "-9"])}> ${"~ ".repeat(extraRests).trim()} | synth pad | scale ${scale} | slow ${slowVal} | lpf ${rint(rng, 400, 700)} | reverb ${rev} | gain ${rnum(rng, 0.5, 0.6)} -- suelo grave`,
+      line: `<-7 ${pick(rng, ["-5", "-4", "-9", "-12"])}> ${"~ ".repeat(extraRests).trim()} | synth pad | scale ${scale} | slow ${slowVal} | lpf ${rint(rng, 400, 700)} | reverb ${rev} | gain ${rnum(rng, 0.5, 0.6)} -- suelo grave`,
     });
 
   if (archetype === "coral") {
@@ -344,8 +344,13 @@ function niebla(rng: Rng): Sketch {
       });
     }
   } else if (archetype === "destello") {
-    // minimal ground + a piano that actually SAYS something
-    lowDrone(8, 2); // period 24 — the 11-13 step piano lanes can't collide
+    // melody-led: the melody IS the intro; the floor is optional and shy
+    if (chance(rng, 0.6)) {
+      lanes.push({
+        tier: 1,
+        line: `<-7 ${pick(rng, ["-5", "-12"])}> ~ ~ | synth pad | scale ${scale} | slow 8 | lpf ${rint(rng, 400, 650)} | reverb ${rev} | gain ${rnum(rng, 0.38, 0.46)} -- suelo discreto`,
+      });
+    }
     const melodies = [
       "7 ~ 9 ~ <12 11> ~ ~ 7 ~ <5 9> ~ ~",
       "<9 7> ~ 12 ~ ~ <11 13> ~ 9 ~ ~ 7 ~",
@@ -353,18 +358,19 @@ function niebla(rng: Rng): Sketch {
     ];
     const melDelay = rnum(rng, 0.45, 0.55);
     lanes.push({
-      tier: 2,
+      tier: 1,
       line: `${pick(rng, melodies)} | synth piano | scale ${scale} | delay ${melDelay} | reverb ${rnum(rng, 0.4, 0.5)} | gain ${rnum(rng, 0.44, 0.5)}${chance(rng, 0.4) ? " | every 8 rev" : ""} -- melodía`,
     });
-    if (chance(rng, 0.5)) {
-      lanes.push({
-        tier: 3,
-        line: `~ ~ ~ ~ ~ <7 ~> ~ ~ ~ ~ ~ | synth piano | scale ${scale} | delay ${melDelay} | pan ${span(rng, 0.3, 0.5)} | gain ${rnum(rng, 0.26, 0.32)} -- eco al otro lado`,
-      });
-    }
+    lanes.push({
+      tier: 2,
+      line: `~ ~ ~ ~ ~ <7 ~> ~ ~ ~ ~ ~ | synth piano | scale ${scale} | delay ${melDelay} | pan ${span(rng, 0.3, 0.5)} | gain ${rnum(rng, 0.26, 0.32)} -- eco al otro lado`,
+    });
   } else if (archetype === "latido") {
-    // the classic: ground + drifting bruma + sparse sparkles + heartbeat
-    lowDrone(4, 3);
+    // the floor is a slow BASS pulse, not the same pad drone as everyone else
+    lanes.push({
+      tier: 1,
+      line: `-7 ${"~ ".repeat(pick(rng, [2, 4])).trim()} | synth bass | scale ${scale} | slow 2 | lpf ${rint(rng, 250, 350)} | gain ${rnum(rng, 0.55, 0.62)} -- pulso grave`,
+    });
     const prog = pick(rng, [[0, 3, 5, 2], [0, 2, -2, 3]]);
     const progStr = prog
       .map((d, i) => (i === 1 && chance(rng, 0.5) ? `<${d} ${d - 2}>` : String(d)))
@@ -383,10 +389,17 @@ function niebla(rng: Rng): Sketch {
     });
   } else {
     // marea: interleaved swells over uneven distant ticks.
-    // Periods measured in BASE steps must never coincide: suelo = len×8
-    // (24|40), bruma = len×4 (20|28) — no combination collides, so the
-    // two voices drift forever instead of hitting together.
-    lowDrone(8, pick(rng, [2, 4]));
+    // Periods measured in BASE steps must never coincide: suelo = 24|40,
+    // bruma = len×4 (20|28) — no combination collides, so the voices
+    // drift forever instead of hitting together.
+    if (chance(rng, 0.5)) {
+      lowDrone(8, 2); // 24 base steps
+    } else {
+      lanes.push({
+        tier: 1,
+        line: `<-7 -5> ~ <-9 ${pick(rng, ["-7", "-12"])}> ~ ~ | synth pad | scale ${scale} | slow 8 | lpf ${rint(rng, 400, 700)} | reverb ${rev} | gain ${rnum(rng, 0.48, 0.56)} -- suelo que camina`,
+      });
+    }
     const chord = `<0 <${pick(rng, [2, 4])} ${pick(rng, [5, 7])}>>`;
     lanes.push({
       tier: 1,
