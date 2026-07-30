@@ -41,6 +41,23 @@ describe("composer", () => {
     expect(signatures.size).toBeGreaterThanOrEqual(4);
   });
 
+  it("niebla: the floor varies in kind, not only in decimals", () => {
+    const counts = new Map<string, number>();
+    const total = 300;
+    for (let seed = 1; seed <= total; seed++) {
+      const track = compose("niebla", seed * 17 + 5);
+      const floor = track.code.split("\n").find((l) => /-- (suelo|pulso|lecho)/.test(l));
+      const label = floor?.match(/-- (.+)$/)?.[1] ?? "sin suelo";
+      counts.set(label, (counts.get(label) ?? 0) + 1);
+    }
+    // at least 6 distinct floor kinds in rotation…
+    expect(counts.size, [...counts.keys()].join(", ")).toBeGreaterThanOrEqual(6);
+    // …and none of them carrying half the channel
+    for (const [label, n] of counts) {
+      expect(n / total, label).toBeLessThan(0.45);
+    }
+  });
+
   it("different seeds produce different tracks", () => {
     const codes = new Set(
       Array.from({ length: 50 }, (_, i) => compose("motor", i * 7 + 1).code)
