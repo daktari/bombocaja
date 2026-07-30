@@ -14,6 +14,19 @@ describe("composer", () => {
     }
   });
 
+  it("niebla: seeds produce structurally different tracks, not decimal jitter", () => {
+    const signatures = new Set(
+      Array.from({ length: 40 }, (_, i) => {
+        const track = compose("niebla", i * 31 + 3);
+        const lines = track.code.split("\n");
+        const has = (word: string) => (lines.some((l) => l.includes(word)) ? "1" : "0");
+        return `${lines.length}:${has("piano")}${has("bd")}${has("ho")}${has("rm(")}`;
+      })
+    );
+    // at least 4 distinct structural shapes across 40 seeds (the archetypes)
+    expect(signatures.size).toBeGreaterThanOrEqual(4);
+  });
+
   it("different seeds produce different tracks", () => {
     const codes = new Set(
       Array.from({ length: 50 }, (_, i) => compose("motor", i * 7 + 1).code)

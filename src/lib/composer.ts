@@ -296,52 +296,89 @@ function casa(rng: Rng): Sketch {
   return { bpm, lanes };
 }
 
-/** NIEBLA — drifting unequal loops; wide register, generous space. */
+/** NIEBLA — four ambient archetypes so no two hours sound the same. */
 function niebla(rng: Rng): Sketch {
   const bpm = rint(rng, 60, 74);
-  const lanes: Lane[] = [];
   const scale = pick(rng, ["menor", "penta", "mayor"]);
-  const rev = rnum(rng, 0.6, 0.7);
-  const padDelay = rnum(rng, 0.3, 0.5);
+  const rev = rnum(rng, 0.6, 0.72);
+  const lanes: Lane[] = [];
 
-  // low ground: sustained deep pad (the missing register the judge flagged)
-  lanes.push({
-    tier: 1,
-    line: `<-7 ${pick(rng, ["-5", "-4", "-9"])}> ${"~ ".repeat(pick(rng, [3, 4])).trim()} | synth pad | scale ${scale} | slow ${pick(rng, [4, 8])} | lpf ${rint(rng, 400, 700)} | reverb ${rev} | gain ${rnum(rng, 0.5, 0.6)} -- suelo grave`,
-  });
+  // the seed first decides WHAT KIND of ambient piece this is
+  const archetype = pick(rng, ["coral", "destello", "latido", "marea"] as const);
 
-  // mid drift: 4-position progression on an unequal length, with delay
-  const prog = pick(rng, [
-    [0, 3, 5, 2],
-    [0, 4, 2, 5],
-    [0, 2, -2, 3],
-  ]);
-  lanes.push({
-    tier: 1,
-    line: `<${prog.join(" ")}> ${"~ ".repeat(pick(rng, [4, 5, 6])).trim()} | synth pad | scale ${scale} | slow 4 | delay ${padDelay} | reverb ${rev} | gain ${rnum(rng, 0.45, 0.55)} -- bruma`,
-  });
+  const lowDrone = (slowVal: number, extraRests: number) =>
+    lanes.push({
+      tier: 1,
+      line: `<-7 ${pick(rng, ["-5", "-4", "-9"])}> ${"~ ".repeat(extraRests).trim()} | synth pad | scale ${scale} | slow ${slowVal} | lpf ${rint(rng, 400, 700)} | reverb ${rev} | gain ${rnum(rng, 0.5, 0.6)} -- suelo grave`,
+    });
 
-  const motifs = [
-    "7 ~ ~ ~ <9 12> ~ ~ ~ ~",
-    "<7 9> ~ ~ ~ ~ 12 ~ ~ ~",
-    "9 ~ ~ <7 ~> ~ ~ ~ <12 14> ~",
-    "7 ~ ~ ~ <9 13> ~ ~ 12? ~",
-  ];
-  lanes.push({
-    tier: 2,
-    line: `${pick(rng, motifs)} | synth piano | scale ${scale} | delay ${rnum(rng, 0.5, 0.6)} | reverb ${rnum(rng, 0.4, 0.5)} | gain ${rnum(rng, 0.4, 0.48)}${chance(rng, 0.4) ? " | every 8 rev" : ""} -- destellos`,
-  });
-
-  if (chance(rng, 0.6)) {
+  if (archetype === "coral") {
+    // three pad voices, unequal lengths — a chordal cloud, no melody at all
+    lowDrone(8, pick(rng, [2, 3]));
+    const prog = pick(rng, [[0, 3, 5, 2], [0, 4, 2, 5], [0, 2, -2, 3]]);
+    lanes.push({
+      tier: 1,
+      line: `<${prog.join(" ")}> ${"~ ".repeat(pick(rng, [3, 4])).trim()} | synth pad | scale ${scale} | slow 4 | delay ${rnum(rng, 0.3, 0.45)} | reverb ${rev} | gain ${rnum(rng, 0.42, 0.5)} -- bruma media`,
+    });
+    lanes.push({
+      tier: 2,
+      line: `<${pick(rng, [7, 9])} ${pick(rng, [11, 12])}> ${"~ ".repeat(pick(rng, [4, 5, 6])).trim()} | synth pad | scale ${scale} | slow 4 | reverb ${rev} | pan ${span(rng, 0.25, 0.5)} | gain ${rnum(rng, 0.3, 0.38)} -- bruma alta`,
+    });
+    if (chance(rng, 0.4)) {
+      lanes.push({
+        tier: 3,
+        line: `bd ${"~ ".repeat(7).trim()} | lpf ${rint(rng, 200, 280)} | reverb 0.4 | gain ${rnum(rng, 0.4, 0.48)} -- latido enterrado`,
+      });
+    }
+  } else if (archetype === "destello") {
+    // minimal ground + a piano that actually SAYS something
+    lowDrone(pick(rng, [4, 8]), 2);
+    const melodies = [
+      "7 ~ 9 ~ <12 11> ~ ~ 7 ~ <5 9> ~ ~",
+      "<9 7> ~ 12 ~ ~ <11 13> ~ 9 ~ ~ 7 ~",
+      "7 ~ ~ 9 <12 ~> ~ 11 ~ ~ <9 14> ~ ~",
+    ];
+    const melDelay = rnum(rng, 0.45, 0.55);
+    lanes.push({
+      tier: 2,
+      line: `${pick(rng, melodies)} | synth piano | scale ${scale} | delay ${melDelay} | reverb ${rnum(rng, 0.4, 0.5)} | gain ${rnum(rng, 0.44, 0.5)}${chance(rng, 0.4) ? " | every 8 rev" : ""} -- melodía`,
+    });
+    if (chance(rng, 0.5)) {
+      lanes.push({
+        tier: 3,
+        line: `~ ~ ~ ~ ~ <7 ~> ~ ~ ~ ~ ~ | synth piano | scale ${scale} | delay ${melDelay} | pan ${span(rng, 0.3, 0.5)} | gain ${rnum(rng, 0.26, 0.32)} -- eco al otro lado`,
+      });
+    }
+  } else if (archetype === "latido") {
+    // the classic: ground + drifting bruma + sparse sparkles + heartbeat
+    lowDrone(4, 3);
+    const prog = pick(rng, [[0, 3, 5, 2], [0, 2, -2, 3]]);
+    lanes.push({
+      tier: 1,
+      line: `<${prog.join(" ")}> ${"~ ".repeat(pick(rng, [4, 5])).trim()} | synth pad | scale ${scale} | slow 4 | delay ${rnum(rng, 0.3, 0.5)} | reverb ${rev} | gain ${rnum(rng, 0.45, 0.55)} -- bruma`,
+    });
+    lanes.push({
+      tier: 2,
+      line: `${pick(rng, ["7 ~ ~ ~ <9 13> ~ ~ 12? ~", "<7 9> ~ ~ ~ ~ 12 ~ ~ ~"])} | synth piano | scale ${scale} | delay ${rnum(rng, 0.5, 0.6)} | reverb ${rnum(rng, 0.4, 0.5)} | gain ${rnum(rng, 0.4, 0.48)} -- destellos`,
+    });
     lanes.push({
       tier: 2,
       line: `bd ${"~ ".repeat(7).trim()} | lpf ${rint(rng, 200, 300)} | reverb ${rnum(rng, 0.3, 0.4)} | gain ${rnum(rng, 0.45, 0.55)} -- latido enterrado`,
     });
-  }
-  if (chance(rng, 0.5)) {
+  } else {
+    // marea: texture over melody — breaths and soft distant percussion
+    lowDrone(8, pick(rng, [2, 3]));
+    lanes.push({
+      tier: 1,
+      line: `<0 ${pick(rng, [2, 4])}> ${"~ ".repeat(pick(rng, [5, 6])).trim()} | synth pad | scale ${scale} | slow 4 | delay ${rnum(rng, 0.35, 0.5)} | reverb ${rev} | gain ${rnum(rng, 0.42, 0.5)} -- bruma`,
+    });
+    lanes.push({
+      tier: 2,
+      line: `ho ${"~ ".repeat(pick(rng, [4, 5])).trim()} | lpf ${rint(rng, 400, 600)} | pan ${span(rng, 0.25, 0.5)} | gain 0.2 -- aliento`,
+    });
     lanes.push({
       tier: 3,
-      line: `ho ${"~ ".repeat(pick(rng, [4, 5])).trim()} | lpf ${rint(rng, 400, 600)} | pan ${span(rng, 0.25, 0.5)} | gain 0.2 -- aliento`,
+      line: `rm(${pick(rng, [2, 3])},${pick(rng, [12, 16])}) | lpf ${rint(rng, 700, 1000)} | delay ${rnum(rng, 0.4, 0.55)} | pan ${span(rng, 0.2, 0.4)} | gain ${rnum(rng, 0.16, 0.22)} -- gotas lejanas`,
     });
   }
 
