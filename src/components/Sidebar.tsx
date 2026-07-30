@@ -116,6 +116,36 @@ const GROUPS: SnippetGroup[] = [
         bpm: 122,
       },
       {
+        name: { es: "Funk de los 80", en: "80s funk" },
+        hint: { es: "LinnDrum con swing", en: "LinnDrum with swing" },
+        code: "bd ~ [~ bd] ~ bd ~ ~ ~ | kit linn | swing 0.25 | gain 0.9\n~ ~ ~ ~ sn ~ ~ [~ sn?] | kit linn | swing 0.25 | reverb 0.2 | gain 0.65\nhh hh? hh hh hh hh? hh [hh hh] | kit linn | swing 0.3 | gain 0.4\ncb ~ ~ cb ~ ~ cb ~ | kit linn | gain 0.3 | pan 0.5\n0 ~ 4 ~ <5 7> ~ [~ 4] ~ | synth bass | scale mayor | swing 0.25 | gain 0.7",
+        bpm: 108,
+      },
+      {
+        name: { es: "Reggaetón mínimo", en: "Minimal reggaeton" },
+        hint: { es: "dembow clásico", en: "classic dembow" },
+        code: "bd ~ ~ bd ~ ~ bd ~ | kit 808 | gain 0.9\n~ ~ sn ~ ~ sn ~ ~ | reverb 0.2 | gain 0.6\nhh hh hh <hh [hh hh]> | gain 0.4\n0 ~ ~ 0 ~ ~ <0 3> ~ | synth bass | scale menor | gain 0.7",
+        bpm: 95,
+      },
+      {
+        name: { es: "Balcánico", en: "Balkan" },
+        hint: { es: "ritmo cojo (7,16)", en: "limping beat (7,16)" },
+        code: "bd(7,16) | every 4 rev | gain 0.85\nsn(3,16) | delay 0.3 | reverb 0.2 | gain 0.55\nhh(11,16) | gain 0.35 | pan 0.3\n7 ~ 9 ~ 7 ~ <11 12> ~ | synth acid | scale menor | fast 2 | gain 0.4 | pan -0.2",
+        bpm: 130,
+      },
+      {
+        name: { es: "Nana sintética", en: "Synthetic lullaby" },
+        hint: { es: "pad + penta + reverb", en: "pad + penta + reverb" },
+        code: "<0 4> <2 5> <4 7> <2 5> | synth pad | scale penta | slow 2 | reverb 0.7 | gain 0.8\n7 ~ ~ 9 ~ ~ <7 12> ~ | synth piano | scale penta | delay 0.5 | swing 0.2 | gain 0.5\nbd ~ ~ ~ ~ ~ ~ ~ | lpf 300 | gain 0.6",
+        bpm: 75,
+      },
+      {
+        name: { es: "Máquina de escribir", en: "Typewriter" },
+        hint: { es: "rimshots nerviosos", en: "nervous rimshots" },
+        code: "rm rm? rm [rm rm] rm? rm rm rm? | pan -0.5 | gain 0.6\nrm? rm rm? rm | pan 0.5 | delay 0.4 | gain 0.45\nbd ~ ~ ~ bd ~ ~ ~ | kit 909 | gain 0.8\n~ ~ ~ ~ ~ ~ cb ~ | delay 0.5 | gain 0.3",
+        bpm: 120,
+      },
+      {
         name: { es: "Tu voz aquí", en: "Your voice here" },
         hint: { es: "graba v1 y v2 en VOZ", en: "record v1 & v2 in VOICE" },
         code: "-- graba v1 y v2 en la fila VOZ 🎤\nv1 ~ [~ v1] v1? | reverb 0.35 | gain 0.8 -- tu voz\nv2(3,8) | delay 0.45 | pan 0.4 | gain 0.6 -- tu voz en eco\nbd ~ ~ bd ~ ~ bd ~ | kit 808 | gain 0.85 -- bombo 808\nhh hh hh <hh ho> | kit 808 | gain 0.35 -- hats",
