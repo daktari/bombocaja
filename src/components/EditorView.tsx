@@ -5,6 +5,7 @@ import Transport from "./Transport";
 import StepGrid from "./StepGrid";
 import Visualizer from "./Visualizer";
 import VoicePanel from "./VoicePanel";
+import IaStrip from "./IaStrip";
 
 const CodeEditor = lazy(() => import("./CodeEditor"));
 import { usePlayer } from "../lib/usePlayer";
@@ -40,6 +41,8 @@ export default function EditorView({ code, onCodeChange, bpm, onBpmChange }: Pro
   /** Mobile: secondary-controls sheet ("⋯") and collapsible steps panel. */
   const [more, setMore] = useState(false);
   const [showSteps, setShowSteps] = useState(false);
+  /** The crates: AI adjustments over whatever is loaded in the editor. */
+  const [iaOpen, setIaOpen] = useState(false);
   const lastMutation = useRef(-1);
 
   const flashFn = useRef<((from: number, to: number) => void) | null>(null);
@@ -278,6 +281,18 @@ export default function EditorView({ code, onCodeChange, bpm, onBpmChange }: Pro
               ↺ {autoTrail.length}
             </button>
           )}
+          <button
+            onClick={() => setIaOpen((open) => !open)}
+            title={t("ia.cratesTitle")}
+            className={
+              "px-4 py-1.5 text-xs font-bold uppercase tracking-widest border transition-all " +
+              (iaOpen
+                ? "bg-acid text-black border-acid"
+                : "border-acid/60 text-acid hover:bg-acid hover:text-black")
+            }
+          >
+            ◉ {t("ia.crates")}
+          </button>
           <div className="flex items-center gap-2 flex-wrap">
             {notice && <span className="text-[10px] text-acid">{notice}</span>}
             {actionControls}
@@ -312,6 +327,18 @@ export default function EditorView({ code, onCodeChange, bpm, onBpmChange }: Pro
               ↺ {autoTrail.length}
             </button>
           )}
+          <button
+            onClick={() => setIaOpen((open) => !open)}
+            title={t("ia.cratesTitle")}
+            className={
+              "px-3 py-1.5 text-xs font-bold border transition-all " +
+              (iaOpen
+                ? "bg-acid text-black border-acid"
+                : "border-acid/60 text-acid hover:bg-acid hover:text-black")
+            }
+          >
+            ◉
+          </button>
           <button
             onClick={() => setMore((open) => !open)}
             title={t("ed.more")}
@@ -380,6 +407,19 @@ export default function EditorView({ code, onCodeChange, bpm, onBpmChange }: Pro
             </div>
             <VoicePanel />
           </div>
+        )}
+
+        {iaOpen && (
+          <IaStrip
+            code={code}
+            bpm={bpm}
+            playing={playing}
+            volume={volume}
+            onApply={(newCode, newBpm) => {
+              onCodeChange(newCode);
+              if (newBpm) onBpmChange(newBpm);
+            }}
+          />
         )}
 
         <Suspense
