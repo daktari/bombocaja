@@ -13,7 +13,9 @@ interface Env {
   ASSETS: { fetch(request: Request): Promise<Response> };
 }
 
-const MODEL = "@cf/meta/llama-3.1-8b-instruct";
+// A coder model reads our DSL best (same family as the one that aced it in
+// local testing). llama-3.1-8b was deprecated by Workers AI on 2026-05-30.
+const MODEL = "@cf/qwen/qwen2.5-coder-32b-instruct";
 const MAX_PROMPT = 280;
 
 interface GenerateBody {
