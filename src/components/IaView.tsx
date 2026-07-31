@@ -15,6 +15,15 @@ import { t } from "../lib/i18n";
 
 type Phase = "idle" | "streaming" | "done" | "closed" | "error";
 
+/** One request in the session: what was asked and the pattern it produced —
+ *  a checkpoint you can jump back to. */
+interface Step {
+  wish: string;
+  mode: "new" | "adjust";
+  code: string;
+  bpm: number;
+}
+
 const EXAMPLES = [
   "un techno berlinés duro y seco",
   "house cálido con piano",
@@ -43,6 +52,8 @@ export default function IaView({ onOpen }: { onOpen: (code: string, bpm?: number
   const [bpm, setBpm] = useState(DEFAULT_BPM);
   const [phase, setPhase] = useState<Phase>("idle");
   const [left, setLeft] = useState(() => iaUsesLeft());
+  const [history, setHistory] = useState<Step[]>([]);
+  const [pending, setPending] = useState<Step | null>(null);
   const startedRef = useRef(false);
   const abortRef = useRef<AbortController | null>(null);
 
@@ -85,6 +96,8 @@ export default function IaView({ onOpen }: { onOpen: (code: string, bpm?: number
     iaConsumeUse();
     setLeft(iaUsesLeft());
     setPhase("streaming");
+    setPending({ wish, mode, code: "", bpm });
+    setPrompt(""); // the request moves into the session stack
     setRaw("");
     setCode("");
     startedRef.current = false;
@@ -119,22 +132,40 @@ export default function IaView({ onOpen }: { onOpen: (code: string, bpm?: number
 
       if (parsed.lanes.length === 0) {
         if (base) setCode(base); // a failed adjust must not eat the pattern
+        setPending(null);
+        setPrompt(wish); // give the request back for another try
         setPhase("error");
         return;
       }
-      setCode(final);
       const announced = extractBpm(final);
+      setCode(final);
       if (announced) setBpm(announced);
       if (!startedRef.current) {
         startedRef.current = true;
         play();
       }
+      setPending(null);
+      setHistory((steps) =>
+        (mode === "new" ? [] : steps).concat({ wish, mode, code: final, bpm: announced ?? bpm })
+      );
       setPhase("done");
     } catch (err) {
       if (controller.signal.aborted) return;
       if (base) setCode(base); // a failed adjust must not eat the pattern
+      setPending(null);
+      setPrompt(wish); // give the request back for another try
       setPhase(err instanceof Error && err.message === "cerrado" ? "closed" : "error");
     }
+  };
+
+  /** Jump back to a checkpoint; later steps fall off the stack. */
+  const restore = (index: number) => {
+    if (phase === "streaming") return;
+    const step = history[index];
+    setCode(step.code);
+    setBpm(step.bpm);
+    setHistory(history.slice(0, index + 1));
+    setPhase("done");
   };
 
   const display = phase === "streaming" ? sanitizeIaCode(raw) || raw : code;
@@ -204,6 +235,39 @@ export default function IaView({ onOpen }: { onOpen: (code: string, bpm?: number
             {t("ia.left", { n: left })}
           </span>
         </div>
+
+        {(history.length > 0 || pending) && (
+          <div className="mt-5 space-y-1 text-[11px]">
+            {history.map((step, i) => (
+              <button
+                key={`${i}-${step.wish}`}
+                onClick={() => restore(i)}
+                title={t("ia.restore")}
+                style={{ marginLeft: Math.min(i, 6) * 14 }}
+                className={
+                  "block text-left px-2.5 py-1 border transition-all " +
+                  (i === history.length - 1 && !pending
+                    ? "border-acid/50 text-acid"
+                    : "border-white/10 text-fog hover:text-acid hover:border-acid/40")
+                }
+              >
+                {step.mode === "adjust" ? "└ " : "▸ "}
+                {step.wish}
+              </button>
+            ))}
+            {pending && (
+              <div
+                style={{ marginLeft: Math.min(history.length, 6) * 14 }}
+                className="px-2.5 py-1 border border-mag/50 text-mag w-fit"
+              >
+                <span className="blink">
+                  {pending.mode === "adjust" ? "└ " : "▸ "}
+                  {pending.wish}
+                </span>
+              </div>
+            )}
+          </div>
+        )}
 
         {phase === "closed" && (
           <p className="mt-5 px-3 py-2.5 border border-mag/50 text-mag text-xs">{t("ia.closed")}</p>
