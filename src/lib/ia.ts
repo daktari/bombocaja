@@ -1,5 +1,6 @@
 import { parsePattern } from "./parser";
 import { MIN_BPM, MAX_BPM } from "./audioEngine";
+import { SPEC, fixMessage } from "../../worker/prompt";
 
 /**
  * Client side of the IA tab. The model streams tokens over SSE; these
@@ -48,6 +49,7 @@ function today(): string {
 }
 
 export function iaUsesLeft(): number {
+  if (import.meta.env.DEV) return IA_DAILY_LIMIT; // local model: on the house
   if (typeof localStorage === "undefined") return IA_DAILY_LIMIT;
   const raw = localStorage.getItem(QUOTA_KEY);
   if (!raw) return IA_DAILY_LIMIT;
@@ -69,21 +71,59 @@ export interface FixPayload {
   warnings: string[];
 }
 
+// In dev there is no worker: the tab talks straight to a local LM Studio
+// server (OpenAI-compatible API, default port, CORS enabled) so the whole
+// experience is testable offline with whatever model is loaded.
+const LOCAL_LLM = "http://localhost:1234/v1";
+let localModel: string | null = null;
+
+async function localModelId(signal?: AbortSignal): Promise<string> {
+  if (localModel) return localModel;
+  const res = await fetch(`${LOCAL_LLM}/models`, { signal });
+  const data = (await res.json()) as { data: { id: string }[] };
+  const model = data.data.find((m) => !m.id.includes("embed"))?.id;
+  if (!model) throw new Error("error");
+  localModel = model;
+  return model;
+}
+
+function localRequest(prompt: string, fix?: FixPayload, model = "local") {
+  const messages = [
+    { role: "system", content: SPEC },
+    { role: "user", content: prompt },
+  ];
+  if (fix) {
+    messages.push({ role: "assistant", content: fix.code });
+    messages.push({ role: "user", content: fixMessage(fix.code, fix.warnings) });
+  }
+  return { model, messages, stream: true, max_tokens: 320, temperature: 0.8 };
+}
+
 /**
- * POST to the worker and hand each accumulated text snapshot to `onText`.
- * Throws "cerrado" when the free daily allocation ran out (503).
+ * POST to the worker (production) or a local LM Studio (dev) and hand each
+ * accumulated text snapshot to `onText`. Throws "cerrado" when the free
+ * daily allocation ran out (503).
  */
 export async function streamGeneration(
   prompt: string,
   onText: (accumulated: string) => void,
   options: { fix?: FixPayload; signal?: AbortSignal } = {}
 ): Promise<string> {
-  const res = await fetch("/api/generar", {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ prompt, fix: options.fix }),
-    signal: options.signal,
-  });
+  const res = import.meta.env.DEV
+    ? await fetch(`${LOCAL_LLM}/chat/completions`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(
+          localRequest(prompt, options.fix, await localModelId(options.signal))
+        ),
+        signal: options.signal,
+      })
+    : await fetch("/api/generar", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ prompt, fix: options.fix }),
+        signal: options.signal,
+      });
   if (res.status === 503) throw new Error("cerrado");
   if (!res.ok || !res.body) throw new Error("error");
 
@@ -103,9 +143,14 @@ export async function streamGeneration(
         const payload = line.slice(6).trim();
         if (payload === "[DONE]") continue;
         try {
-          const parsed = JSON.parse(payload) as { response?: string };
-          if (typeof parsed.response === "string") {
-            text += parsed.response;
+          // Workers AI shape ({response}) or OpenAI shape (choices[].delta)
+          const parsed = JSON.parse(payload) as {
+            response?: string;
+            choices?: { delta?: { content?: string } }[];
+          };
+          const delta = parsed.response ?? parsed.choices?.[0]?.delta?.content;
+          if (typeof delta === "string") {
+            text += delta;
             onText(text);
           }
         } catch {
