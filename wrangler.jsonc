@@ -1,6 +1,7 @@
 {
-  // Cloudflare Workers static assets — deployed with `npx wrangler deploy`
-  "name": "bakaluti",
+  // Cloudflare Workers static assets — deployed with `npx wrangler deploy`.
+  // The service keeps the project's original name; bakaluti.com points at it.
+  "name": "bombocaja",
   "compatibility_date": "2025-01-01",
   "main": "./worker/index.ts",
   "assets": {
