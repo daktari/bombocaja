@@ -78,7 +78,7 @@ async function generar(request: Request, env: Env): Promise<Response> {
     // fail closed, never bill — but say WHY, so a missing binding or a bad
     // model id can't masquerade as an exhausted quota
     const detail = err instanceof Error ? err.message : String(err);
-    console.error("workers-ai:", detail);
+    console.error("workers-ai:", MODEL, detail);
     return json({ error: "cerrado", detail }, 503);
   }
 }
