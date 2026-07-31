@@ -15,8 +15,7 @@ DSL (cada línea = una capa que suena en bucle a la vez que las demás):
 
 FORMATO DE RESPUESTA:
 - Línea 1: -- bpm NNN (entre 60 y 180)
-- Después 3 a 6 líneas de patrón, cada una con un -- comentario corto en español.
-- Nada más.
+- Después 3 a 6 líneas de patrón. SIN comentarios, sin texto alrededor, nada más.
 
 RECETAS DE ESTILO (guía, adapta según la petición):
 - techno industrial (duro, seco): bpm 135-145 · bd bd bd bd | kit 909 | drive 0.6 | gain 0.9 · percusión en 5 o 7 pasos (mt ~ mt ~ ~) · sin reverb ni delay · bajo grave | lpf 300 | drive 0.5.
@@ -26,6 +25,11 @@ RECETAS DE ESTILO (guía, adapta según la petición):
 - ambient (lento, flotante): bpm 60-75 · sin bombo o muy escaso · <-7 -5> ~ ~ | synth pad | scale penta | slow 8 | reverb 0.7 · mucha ~ · melodía escasa 7 ~ ~ 9 | synth piano | delay 0.5.
 - trap: bpm 140 · kit 808 · bd ~ ~ [~ bd] ~ ~ ~ ~ · sn en el tercer tiempo · hats [hh hh hh] hh <hh [hh hh]> hh.
 - breakbeat: bpm 130-140 · bd [~ bd] sn ~ [bd ~] ~ sn [~ bd] · hats sueltos con ?.`;
+
+/** Vibe-coding over an existing pattern: same format, full rewrite. */
+export function adjustMessage(code: string, wish: string): string {
+  return `Patrón actual:\n${code}\n\nAjuste pedido: ${wish}\n\nDevuelve el patrón COMPLETO ya modificado (no solo las líneas que cambian), mismo formato (línea 1: -- bpm NNN), sin explicaciones. Conserva lo que el ajuste no toca.`;
+}
 
 /** One retry message when the parser rejects the first attempt. */
 export function fixMessage(code: string, warnings: string[]): string {

@@ -23,6 +23,14 @@ const EXAMPLES = [
   "un ritmo que suene a lluvia",
 ];
 
+const ADJUST_EXAMPLES = [
+  "añádele más groove",
+  "más oscuro y lento",
+  "quita el piano",
+  "dobla los hats",
+  "métele acid",
+];
+
 /**
  * The IA tab: natural language in, a playing pattern out. Tokens stream
  * straight into view (the pattern types itself) and playback starts as soon
@@ -65,13 +73,15 @@ export default function IaView({ onOpen }: { onOpen: (code: string, bpm?: number
     }
   };
 
-  const generate = async () => {
+  const generate = async (mode: "new" | "adjust" = "new") => {
     const wish = prompt.trim();
     if (!wish || phase === "streaming") return;
     if (iaUsesLeft() <= 0) {
       setPhase("closed");
       return;
     }
+    // vibe-coding: the current pattern travels along and gets rewritten
+    const base = mode === "adjust" && code ? code : undefined;
     iaConsumeUse();
     setLeft(iaUsesLeft());
     setPhase("streaming");
@@ -83,7 +93,10 @@ export default function IaView({ onOpen }: { onOpen: (code: string, bpm?: number
     abortRef.current = controller;
 
     try {
-      let text = await streamGeneration(wish, applyText, { signal: controller.signal });
+      let text = await streamGeneration(wish, applyText, {
+        code: base,
+        signal: controller.signal,
+      });
       let final = sanitizeIaCode(text);
       let parsed = parsePattern(final);
 
@@ -92,6 +105,7 @@ export default function IaView({ onOpen }: { onOpen: (code: string, bpm?: number
         iaConsumeUse();
         setLeft(iaUsesLeft());
         text = await streamGeneration(wish, applyText, {
+          code: base,
           fix: { code: text, warnings: parsed.warnings },
           signal: controller.signal,
         });
@@ -100,6 +114,7 @@ export default function IaView({ onOpen }: { onOpen: (code: string, bpm?: number
       }
 
       if (parsed.lanes.length === 0) {
+        if (base) setCode(base); // a failed adjust must not eat the pattern
         setPhase("error");
         return;
       }
@@ -113,6 +128,7 @@ export default function IaView({ onOpen }: { onOpen: (code: string, bpm?: number
       setPhase("done");
     } catch (err) {
       if (controller.signal.aborted) return;
+      if (base) setCode(base); // a failed adjust must not eat the pattern
       setPhase(err instanceof Error && err.message === "cerrado" ? "closed" : "error");
     }
   };
@@ -131,19 +147,38 @@ export default function IaView({ onOpen }: { onOpen: (code: string, bpm?: number
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter") void generate();
+              if (e.key === "Enter") void generate(code ? "adjust" : "new");
             }}
             maxLength={280}
-            placeholder={t("ia.placeholder")}
+            placeholder={code ? t("ia.adjustPlaceholder") : t("ia.placeholder")}
             className="flex-1 px-3 py-2.5 text-sm bg-black border border-acid/40 outline-none text-acid placeholder-fog focus:border-acid transition-all"
           />
+          {code && (
+            <button
+              onClick={() => void generate("adjust")}
+              disabled={phase === "streaming" || !prompt.trim()}
+              className="px-5 py-2.5 text-xs font-bold uppercase tracking-widest text-black bg-acid shadow-[4px_4px_0_#ff3ea5] hover:shadow-[2px_2px_0_#ff3ea5] hover:translate-x-[2px] hover:translate-y-[2px] transition-all disabled:opacity-50 disabled:shadow-none"
+            >
+              {phase === "streaming" ? (
+                <span className="blink">{t("ia.generating")}</span>
+              ) : (
+                t("ia.adjust")
+              )}
+            </button>
+          )}
           <button
-            onClick={() => void generate()}
+            onClick={() => void generate("new")}
             disabled={phase === "streaming" || !prompt.trim()}
-            className="px-5 py-2.5 text-xs font-bold uppercase tracking-widest text-black bg-acid shadow-[4px_4px_0_#ff3ea5] hover:shadow-[2px_2px_0_#ff3ea5] hover:translate-x-[2px] hover:translate-y-[2px] transition-all disabled:opacity-50 disabled:shadow-none"
+            className={
+              code
+                ? "px-4 py-2.5 text-xs uppercase tracking-widest border border-white/20 text-fog hover:border-acid/60 hover:text-acid transition-all disabled:opacity-50"
+                : "px-5 py-2.5 text-xs font-bold uppercase tracking-widest text-black bg-acid shadow-[4px_4px_0_#ff3ea5] hover:shadow-[2px_2px_0_#ff3ea5] hover:translate-x-[2px] hover:translate-y-[2px] transition-all disabled:opacity-50 disabled:shadow-none"
+            }
           >
-            {phase === "streaming" ? (
+            {phase === "streaming" && !code ? (
               <span className="blink">{t("ia.generating")}</span>
+            ) : code ? (
+              t("ia.fresh")
             ) : (
               t("ia.generate")
             )}
@@ -151,7 +186,7 @@ export default function IaView({ onOpen }: { onOpen: (code: string, bpm?: number
         </div>
 
         <div className="flex gap-2 flex-wrap mt-3">
-          {EXAMPLES.map((example) => (
+          {(code ? ADJUST_EXAMPLES : EXAMPLES).map((example) => (
             <button
               key={example}
               onClick={() => setPrompt(example)}

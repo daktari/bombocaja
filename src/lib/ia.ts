@@ -1,6 +1,6 @@
 import { parsePattern } from "./parser";
 import { MIN_BPM, MAX_BPM } from "./audioEngine";
-import { SPEC, fixMessage } from "../../worker/prompt";
+import { SPEC, adjustMessage, fixMessage } from "../../worker/prompt";
 
 /**
  * Client side of the IA tab. The model streams tokens over SSE; these
@@ -87,10 +87,10 @@ async function localModelId(signal?: AbortSignal): Promise<string> {
   return model;
 }
 
-function localRequest(prompt: string, fix?: FixPayload, model = "local") {
+function localRequest(prompt: string, code?: string, fix?: FixPayload, model = "local") {
   const messages = [
     { role: "system", content: SPEC },
-    { role: "user", content: prompt },
+    { role: "user", content: code ? adjustMessage(code, prompt) : prompt },
   ];
   if (fix) {
     messages.push({ role: "assistant", content: fix.code });
@@ -107,21 +107,21 @@ function localRequest(prompt: string, fix?: FixPayload, model = "local") {
 export async function streamGeneration(
   prompt: string,
   onText: (accumulated: string) => void,
-  options: { fix?: FixPayload; signal?: AbortSignal } = {}
+  options: { code?: string; fix?: FixPayload; signal?: AbortSignal } = {}
 ): Promise<string> {
   const res = import.meta.env.DEV
     ? await fetch(`${LOCAL_LLM}/chat/completions`, {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify(
-          localRequest(prompt, options.fix, await localModelId(options.signal))
+          localRequest(prompt, options.code, options.fix, await localModelId(options.signal))
         ),
         signal: options.signal,
       })
     : await fetch("/api/generar", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ prompt, fix: options.fix }),
+        body: JSON.stringify({ prompt, code: options.code, fix: options.fix }),
         signal: options.signal,
       });
   if (res.status === 503) throw new Error("cerrado");

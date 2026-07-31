@@ -1,4 +1,4 @@
-import { SPEC, fixMessage } from "./prompt";
+import { SPEC, adjustMessage, fixMessage } from "./prompt";
 
 /**
  * The only server-side code in bakaluti: a thin proxy in front of Workers AI
@@ -18,6 +18,8 @@ const MAX_PROMPT = 280;
 
 interface GenerateBody {
   prompt?: string;
+  /** vibe-coding: the current pattern the prompt should adjust */
+  code?: string;
   /** retry payload: the rejected pattern and the parser's warnings */
   fix?: { code: string; warnings: string[] };
 }
@@ -46,9 +48,10 @@ async function generar(request: Request, env: Env): Promise<Response> {
   const prompt = (body.prompt ?? "").trim().slice(0, MAX_PROMPT);
   if (!prompt) return json({ error: "falta la petición" }, 400);
 
+  const base = typeof body.code === "string" ? body.code.trim().slice(0, 2000) : "";
   const messages: { role: string; content: string }[] = [
     { role: "system", content: SPEC },
-    { role: "user", content: prompt },
+    { role: "user", content: base ? adjustMessage(base, prompt) : prompt },
   ];
   if (body.fix && typeof body.fix.code === "string" && Array.isArray(body.fix.warnings)) {
     messages.push({ role: "assistant", content: body.fix.code.slice(0, 2000) });
