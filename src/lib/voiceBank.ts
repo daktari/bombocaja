@@ -3,6 +3,8 @@
  * Blobs persist in IndexedDB; AudioBuffers decode lazily per context.
  */
 
+// legacy database name kept on purpose: renaming IndexedDB means
+// copying blobs across databases for zero visible benefit
 const DB_NAME = "bombocaja";
 const STORE = "voices";
 export const VOICE_SLOTS = 8;

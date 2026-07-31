@@ -1,6 +1,5 @@
-// "bombocaja.*" are legacy internal keys — kept so existing users retain their data
-const PROGRESS_KEY = "bombocaja.progress";
-const PATTERNS_KEY = "bombocaja.patterns";
+const PROGRESS_KEY = "bakaluti.progress";
+const PATTERNS_KEY = "bakaluti.patterns";
 
 export interface SavedPattern {
   id: string;

@@ -3,8 +3,10 @@ import ReactDOM from "react-dom/client";
 import App from "./App";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { getLang } from "./lib/i18n";
+import { migrateLegacyStorage } from "./lib/migrate";
 import "./index.css";
 
+migrateLegacyStorage(); // bombocaja.* → bakaluti.* before anything reads storage
 document.documentElement.lang = getLang();
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
