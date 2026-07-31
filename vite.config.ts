@@ -13,5 +13,14 @@ export default defineConfig({
       usePolling: true,
       interval: 300,
     },
+    proxy: {
+      // IA tab in dev → the host's LM Studio, proxied to dodge CORS entirely.
+      // (vite runs inside docker, so "localhost" would be the container itself)
+      "/llm": {
+        target: "http://host.docker.internal:1234",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/llm/, ""),
+      },
+    },
   },
 });

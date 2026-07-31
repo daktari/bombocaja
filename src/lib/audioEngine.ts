@@ -319,6 +319,47 @@ class AudioEngine {
     });
   }
 
+  private crackle: { gain: GainNode; src: AudioBufferSourceNode } | null = null;
+
+  /** Vinyl surface noise — the sound of the IA digging in the crates. */
+  setCrackle(on: boolean) {
+    if (!on) {
+      if (this.crackle && this.ctx) {
+        const { gain, src } = this.crackle;
+        gain.gain.setTargetAtTime(0, this.ctx.currentTime, 0.15);
+        window.setTimeout(() => src.stop(), 700);
+        this.crackle = null;
+      }
+      return;
+    }
+    if (this.crackle) return;
+    const ctx = this.ensureContext();
+    void ctx.resume();
+    // 2s loop: faint hiss + sparse baked-in pops, lowpassed like worn vinyl
+    const buffer = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * 0.012;
+    for (let pop = 0; pop < 50; pop++) {
+      const at = Math.floor(Math.random() * (data.length - 90));
+      const amp = 0.08 + Math.random() * 0.28;
+      for (let j = 0; j < 90; j++) data[at + j] += (Math.random() * 2 - 1) * amp * (1 - j / 90);
+    }
+    const src = ctx.createBufferSource();
+    src.buffer = buffer;
+    src.loop = true;
+    const lpf = ctx.createBiquadFilter();
+    lpf.type = "lowpass";
+    lpf.frequency.value = 4200;
+    const gain = ctx.createGain();
+    gain.gain.value = 0;
+    gain.gain.setTargetAtTime(0.5, ctx.currentTime, 0.25);
+    src.connect(lpf);
+    lpf.connect(gain);
+    gain.connect(this.master!);
+    src.start();
+    this.crackle = { gain, src };
+  }
+
   /** Public handle for UI features that need the shared context (voice rec). */
   getAudioContext(): AudioContext {
     return this.ensureContext();

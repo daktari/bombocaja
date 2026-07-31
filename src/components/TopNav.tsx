@@ -2,9 +2,9 @@ import { useState } from "react";
 import { getLang, t, toggleLang } from "../lib/i18n";
 import Rich from "./Rich";
 
-export type Tab = "editor" | "fm" | "learn" | "library";
+export type Tab = "editor" | "fm" | "ia" | "learn" | "library";
 
-const TABS: Tab[] = ["editor", "fm", "learn", "library"];
+const TABS: Tab[] = ["editor", "fm", "ia", "learn", "library"];
 
 const LINKS = [
   { label: "strudel.cc", href: "https://strudel.cc" },

@@ -5,6 +5,7 @@ import Transport from "./Transport";
 import StepGrid from "./StepGrid";
 import Visualizer from "./Visualizer";
 import VoicePanel from "./VoicePanel";
+import IaStrip from "./IaStrip";
 
 const CodeEditor = lazy(() => import("./CodeEditor"));
 import { usePlayer } from "../lib/usePlayer";
@@ -40,6 +41,8 @@ export default function EditorView({ code, onCodeChange, bpm, onBpmChange }: Pro
   /** Mobile: secondary-controls sheet ("⋯") and collapsible steps panel. */
   const [more, setMore] = useState(false);
   const [showSteps, setShowSteps] = useState(false);
+  /** The crates: AI adjustments over whatever is loaded in the editor. */
+  const [iaOpen, setIaOpen] = useState(false);
   const lastMutation = useRef(-1);
 
   const flashFn = useRef<((from: number, to: number) => void) | null>(null);
@@ -150,6 +153,24 @@ export default function EditorView({ code, onCodeChange, bpm, onBpmChange }: Pro
     }
   };
 
+  // The IA button lives inside the transport group, styled like the hero
+  // actions — this feature deserves the spotlight.
+  const iaButton = (
+    <button
+      onClick={() => setIaOpen((open) => !open)}
+      title={t("ia.cratesTitle")}
+      className={
+        "px-4 py-1.5 text-xs font-bold uppercase tracking-widest transition-all " +
+        (iaOpen
+          ? "bg-mag text-black shadow-[0_0_14px_rgba(255,62,165,0.5)]"
+          : "bg-acid text-black shadow-[3px_3px_0_#ff3ea5] hover:shadow-[1px_1px_0_#ff3ea5] hover:translate-x-[2px] hover:translate-y-[2px]")
+      }
+    >
+      ◉ <span className="hidden sm:inline">{t("ia.assistant")}</span>
+      <span className="sm:hidden">{t("ia.assistantShort")}</span>
+    </button>
+  );
+
   // Save / share / export controls, shared by the desktop toolbar and the
   // mobile "más controles" sheet (state is common, so both stay in sync).
   const actionControls = (
@@ -255,7 +276,9 @@ export default function EditorView({ code, onCodeChange, bpm, onBpmChange }: Pro
             onBpmChange={onBpmChange}
             volume={volume}
             onVolumeChange={setVolume}
-          />
+          >
+            {iaButton}
+          </Transport>
           <button
             onClick={toggleAuto}
             title={t("auto.title")}
@@ -289,7 +312,9 @@ export default function EditorView({ code, onCodeChange, bpm, onBpmChange }: Pro
 
         {/* Mobile toolbar: only the essentials; the rest lives behind "⋯". */}
         <div className="relative z-10 flex lg:hidden items-center gap-2 flex-wrap">
-          <Transport playing={playing} onPlay={play} onStop={stop} bpm={bpm} />
+          <Transport playing={playing} onPlay={play} onStop={stop} bpm={bpm}>
+            {iaButton}
+          </Transport>
           <button
             onClick={toggleAuto}
             title={t("auto.title")}
@@ -398,6 +423,19 @@ export default function EditorView({ code, onCodeChange, bpm, onBpmChange }: Pro
             className="relative z-10 flex-1 min-h-0 overflow-hidden bg-black/70 backdrop-blur-sm border border-acid/25 focus-within:border-acid/60 focus-within:shadow-[4px_4px_0_rgba(200,255,0,0.15)] transition-all"
           />
         </Suspense>
+
+        {iaOpen && (
+          <IaStrip
+            code={code}
+            bpm={bpm}
+            playing={playing}
+            volume={volume}
+            onApply={(newCode, newBpm) => {
+              onCodeChange(newCode);
+              if (newBpm) onBpmChange(newBpm);
+            }}
+          />
+        )}
 
         <div className="relative z-10 hidden lg:block">
           <VoicePanel />

@@ -4,7 +4,8 @@ import EditorView, { DEFAULT_CODE } from "./components/EditorView";
 import LearnView from "./components/LearnView";
 import LibraryView from "./components/LibraryView";
 import FmView from "./components/FmView";
-import { momentFromHash, sharedFromHash } from "./lib/share";
+import IaView from "./components/IaView";
+import { momentFromHash, sessionFromHash, sharedFromHash } from "./lib/share";
 import { DEFAULT_BPM } from "./lib/audioEngine";
 import { HERO_CODE } from "./lib/gallery";
 
@@ -15,15 +16,19 @@ const VISITED_KEY = "bombocaja.visited";
 const SHARED = typeof location !== "undefined" ? sharedFromHash() : null;
 // A shared FM moment (#fm=…&t=…) opens the station in replay mode.
 const MOMENT = typeof location !== "undefined" ? momentFromHash() : null;
+// A shared IA session (#s=…) opens the IA tab with the whole lineage loaded.
+const SESSION = typeof location !== "undefined" ? sessionFromHash() : null;
 
 export default function App() {
   // First visit lands straight in the editor with the welcome pattern loaded.
   const [editorCode, setEditorCode] = useState<string>(
     () => SHARED?.code ?? (localStorage.getItem(VISITED_KEY) ? DEFAULT_CODE : HERO_CODE)
   );
-  const [tab, setTab] = useState<Tab>(MOMENT ? "fm" : "editor");
+  const [tab, setTab] = useState<Tab>(MOMENT ? "fm" : SESSION ? "ia" : "editor");
   const [bpm, setBpm] = useState(SHARED?.bpm ?? DEFAULT_BPM);
   const [moment, setMoment] = useState(MOMENT);
+  /** a track the radio sends over for the IA to remix */
+  const [iaSeed, setIaSeed] = useState<{ code: string; bpm: number; title: string } | null>(null);
 
   useEffect(() => {
     localStorage.setItem(VISITED_KEY, "1");
@@ -48,7 +53,23 @@ export default function App() {
           />
         )}
         {tab === "fm" && (
-          <FmView onRemix={openInEditor} moment={moment} onClearMoment={() => setMoment(null)} />
+          <FmView
+            onRemix={openInEditor}
+            onIaRemix={(code, trackBpm, title) => {
+              setIaSeed({ code, bpm: trackBpm, title });
+              setTab("ia");
+            }}
+            moment={moment}
+            onClearMoment={() => setMoment(null)}
+          />
+        )}
+        {tab === "ia" && (
+          <IaView
+            onOpen={openInEditor}
+            seed={iaSeed}
+            onSeedConsumed={() => setIaSeed(null)}
+            session={SESSION}
+          />
         )}
         {tab === "learn" && <LearnView />}
         {tab === "library" && <LibraryView onLoad={openInEditor} />}
