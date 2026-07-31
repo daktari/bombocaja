@@ -8,7 +8,15 @@ import { SPEC, adjustMessage, fixMessage } from "../../worker/prompt";
  * models honest by dropping every line the parser doesn't accept).
  */
 
-/** Strip markdown fences and prose: keep only lines the parser accepts. */
+/** A lane that parses but never makes a sound is noise, not music. */
+function isAllRests(line: string): boolean {
+  const body = line.split("|")[0].replace(/--.*$/, "");
+  const tokens = body.split(/[\s[\]<>]+/).filter(Boolean);
+  return tokens.length > 0 && tokens.every((token) => token.startsWith("~"));
+}
+
+/** Strip markdown fences, prose and silent lanes: keep what the parser
+ *  accepts AND actually sounds. */
 export function sanitizeIaCode(raw: string): string {
   let text = raw;
   const fence = raw.match(/```(?:\w*\n)?([\s\S]*?)(?:```|$)/);
@@ -17,6 +25,7 @@ export function sanitizeIaCode(raw: string): string {
   const kept = lines.filter((line) => {
     const trimmed = line.trim();
     if (trimmed === "" || trimmed.startsWith("--")) return true;
+    if (isAllRests(trimmed)) return false;
     const { lanes, warnings } = parsePattern(line);
     return lanes.length > 0 && warnings.length === 0;
   });

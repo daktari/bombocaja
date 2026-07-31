@@ -102,11 +102,15 @@ export default function IaView({ onOpen }: { onOpen: (code: string, bpm?: number
 
       // one silent retry: hand the parser's complaints back to the model
       if ((parsed.lanes.length === 0 || parsed.warnings.length > 0) && iaUsesLeft() > 0) {
+        const complaints =
+          parsed.warnings.length > 0
+            ? parsed.warnings
+            : ["todas las líneas son solo silencios (~): no suena nada — pon sonidos y notas"];
         iaConsumeUse();
         setLeft(iaUsesLeft());
         text = await streamGeneration(wish, applyText, {
           code: base,
-          fix: { code: text, warnings: parsed.warnings },
+          fix: { code: text, warnings: complaints },
           signal: controller.signal,
         });
         final = sanitizeIaCode(text);
@@ -196,6 +200,7 @@ export default function IaView({ onOpen }: { onOpen: (code: string, bpm?: number
             </button>
           ))}
           <span className="ml-auto text-[10px] text-fog/70 self-center">
+            {prompt.length > 0 && <span className="mr-3">{prompt.length}/280</span>}
             {t("ia.left", { n: left })}
           </span>
         </div>

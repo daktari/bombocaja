@@ -18,6 +18,12 @@ describe("IA output sanitizer", () => {
     expect(sanitizeIaCode(raw)).toBe("bd bd bd bd | drive 0.6 -- martillo");
   });
 
+  it("drops silent lanes: valid syntax, zero content", () => {
+    const raw =
+      "-- bpm 72\n~ ~ ~ ~ | synth pad | slow 8 | reverb 0.7\n7 ~ ~ 9 | synth piano | delay 0.5\n~ ~ | synth bass | lpf 200";
+    expect(sanitizeIaCode(raw)).toBe("-- bpm 72\n7 ~ ~ 9 | synth piano | delay 0.5");
+  });
+
   it("playableSlice drops the half-written last line while streaming", () => {
     const streamed = "-- bpm 124\nbd bd bd bd -- bombo\n~ cp ~ c";
     expect(playableSlice(streamed)).toBe("-- bpm 124\nbd bd bd bd -- bombo");
