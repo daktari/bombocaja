@@ -358,6 +358,10 @@ export default function IaView({ onOpen, seed, onSeedConsumed, session }: Props)
     <div className="flex-1 overflow-y-auto p-5 md:p-7 relative min-w-0">
       <Visualizer />
       <div className="relative z-10 max-w-3xl mx-auto">
+        <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.3em] text-mag mb-1">
+          <span className="w-2 h-2 bg-mag blink shadow-[0_0_8px_#ff3ea5]" />
+          {t("ia.eyebrow")}
+        </div>
         <h1 className="text-2xl md:text-3xl uppercase tracking-wide led mb-2">{t("ia.title")}</h1>
         <p className="text-xs text-fog leading-relaxed max-w-lg mb-5">{t("ia.sub")}</p>
 
