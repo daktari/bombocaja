@@ -406,19 +406,6 @@ export default function EditorView({ code, onCodeChange, bpm, onBpmChange }: Pro
           </div>
         )}
 
-        {iaOpen && (
-          <IaStrip
-            code={code}
-            bpm={bpm}
-            playing={playing}
-            volume={volume}
-            onApply={(newCode, newBpm) => {
-              onCodeChange(newCode);
-              if (newBpm) onBpmChange(newBpm);
-            }}
-          />
-        )}
-
         <Suspense
           fallback={
             <div className="relative z-10 flex-1 min-h-0 bg-black/70 border border-acid/25 flex items-center justify-center text-xs text-fog">
@@ -435,6 +422,19 @@ export default function EditorView({ code, onCodeChange, bpm, onBpmChange }: Pro
             className="relative z-10 flex-1 min-h-0 overflow-hidden bg-black/70 backdrop-blur-sm border border-acid/25 focus-within:border-acid/60 focus-within:shadow-[4px_4px_0_rgba(200,255,0,0.15)] transition-all"
           />
         </Suspense>
+
+        {iaOpen && (
+          <IaStrip
+            code={code}
+            bpm={bpm}
+            playing={playing}
+            volume={volume}
+            onApply={(newCode, newBpm) => {
+              onCodeChange(newCode);
+              if (newBpm) onBpmChange(newBpm);
+            }}
+          />
+        )}
 
         <div className="relative z-10 hidden lg:block">
           <VoicePanel />

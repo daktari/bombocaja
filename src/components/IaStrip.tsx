@@ -115,7 +115,7 @@ export default function IaStrip({ code, bpm, playing, volume, onApply }: Props) 
     <div className="relative z-10 border border-acid/25 bg-panel px-3 py-2.5 space-y-2">
       <div className="flex gap-2 items-center">
         <span className="text-[9px] uppercase tracking-[0.2em] text-fog select-none hidden sm:inline">
-          {t("ia.crates")}
+          {t("ia.stripLabel")}
         </span>
         <input
           value={prompt}
