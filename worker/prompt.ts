@@ -29,7 +29,7 @@ RECETAS DE ESTILO (guía, adapta según la petición):
 
 /** Vibe-coding over an existing pattern: same format, full rewrite. */
 export function adjustMessage(code: string, wish: string): string {
-  return `Patrón actual:\n${code}\n\nAjuste pedido: ${wish}\n\nDevuelve el patrón COMPLETO ya modificado (no solo las líneas que cambian), mismo formato (línea 1: -- bpm NNN), sin explicaciones. Conserva lo que el ajuste no toca.`;
+  return `Patrón actual:\n${code}\n\nAjuste pedido: ${wish}\n\nDevuelve el patrón COMPLETO ya modificado (no solo las líneas que cambian), mismo formato (línea 1: -- bpm NNN), sin explicaciones. Conserva lo que el ajuste no toca, pero el cambio pedido debe ser CLARAMENTE AUDIBLE: toca al menos 2 líneas o parámetros de forma decidida (nada de cambios de centésimas). Si el ajuste pide un tempo o velocidad concretos, cámbialo en la línea -- bpm.`;
 }
 
 /** One retry message when the parser rejects the first attempt. */

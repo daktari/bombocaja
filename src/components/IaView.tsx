@@ -1,7 +1,7 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { usePlayer } from "../lib/usePlayer";
 import { parsePattern } from "../lib/parser";
-import { audioEngine, DEFAULT_BPM } from "../lib/audioEngine";
+import { audioEngine, DEFAULT_BPM, MAX_BPM, MIN_BPM } from "../lib/audioEngine";
 import { addPattern } from "../lib/storage";
 import { sessionUrl, type SessionStep } from "../lib/share";
 import {
@@ -284,15 +284,35 @@ export default function IaView({ onOpen, seed, onSeedConsumed, session }: Props)
     setPhase("done");
   };
 
-  /** Turn the mood knobs into words and send them to the crates. */
+  /** Turn the mood knobs into words and send them to the crates — except
+   *  tempo, which is a deck parameter: it turns the pitch fader directly
+   *  (instant, free, always audible) instead of asking the model. */
   const applyMoods = () => {
+    const tempoIndex = MOODS.findIndex((mood) => mood.key === "fast");
+    const tempo = moods[tempoIndex];
+    const newBpm = Math.min(MAX_BPM, Math.max(MIN_BPM, bpm + tempo * 8));
     const pieces = MOODS.map((mood, i) => {
       const value = moods[i];
-      if (value === 0) return null;
+      if (value === 0 || i === tempoIndex) return null;
       const what = t(value > 0 ? mood.right : mood.left);
       return t(Math.abs(value) === 2 ? "ia.moodMuchMore" : "ia.moodBitMore", { what });
     }).filter(Boolean) as string[];
-    if (pieces.length === 0) return;
+
+    if (pieces.length === 0) {
+      if (tempo === 0) return;
+      setMoods([0, 0, 0, 0]);
+      setBpm(newBpm);
+      // the checkpoint keeps the new tempo, so restoring it sounds right
+      setHistory((steps) =>
+        steps.length > 0
+          ? [...steps.slice(0, -1), { ...steps[steps.length - 1], bpm: newBpm }]
+          : steps
+      );
+      flash(`${newBpm} bpm`);
+      return;
+    }
+
+    if (tempo !== 0) pieces.push(`pon el tempo en ${newBpm} bpm`);
     setMoods([0, 0, 0, 0]);
     void generate("adjust", pieces.join(", "));
   };
