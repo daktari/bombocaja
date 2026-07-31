@@ -71,10 +71,10 @@ export interface FixPayload {
   warnings: string[];
 }
 
-// In dev there is no worker: the tab talks straight to a local LM Studio
-// server (OpenAI-compatible API, default port, CORS enabled) so the whole
-// experience is testable offline with whatever model is loaded.
-const LOCAL_LLM = "http://localhost:1234/v1";
+// In dev there is no worker: the tab talks to a local LM Studio server
+// (OpenAI-compatible API on port 1234) through vite's /llm proxy, so no
+// CORS setup is needed and any loaded model works.
+const LOCAL_LLM = "/llm/v1";
 let localModel: string | null = null;
 
 async function localModelId(signal?: AbortSignal): Promise<string> {
