@@ -6,6 +6,8 @@ Antes «bombocaja». Un mini-playground web para aprender a hacer ritmos escribi
 Inspirado en Strudel / TidalCycles, pero radicalmente simplificado para
 gente sin ningún conocimiento musical.
 
+![El editor de bakaluti: código que baila, rejilla de pasos y todo el lenguaje a la vista](docs/editor.png)
+
 ## Correr (solo necesitas Docker)
 
 ```bash
@@ -171,6 +173,8 @@ temas evolucionan por dentro (entran capas, se despiden al final) y el botón
 generado la vigilan un linter musical (10.000 temas validados en los tests)
 y revisiones a ciegas de un agente crítico independiente.
 
+![bakaluti FM reproduciendo un tema generado, con su partitura en directo](docs/fm.png)
+
 ## La residente: pídele un ritmo 🎧
 
 Pestaña **Residente**: la DJ residente de la casa. Le pides en lenguaje
@@ -181,6 +185,8 @@ mood, diff de cada ajuste y sesiones compartibles por URL. En el Editor, el
 botón **◉ asistente IA** aplica lo mismo sobre cualquier patrón cargado.
 Corre en Workers AI dentro de la capa gratuita; en desarrollo apunta a un
 LM Studio local.
+
+![La cabina de peticiones de la residente, con el hilo de la sesión y los knobs de mood](docs/residente.png)
 
 ## Aprender, guardar y compartir
 
