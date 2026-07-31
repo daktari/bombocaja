@@ -166,7 +166,8 @@ export default function EditorView({ code, onCodeChange, bpm, onBpmChange }: Pro
           : "bg-acid text-black shadow-[3px_3px_0_#ff3ea5] hover:shadow-[1px_1px_0_#ff3ea5] hover:translate-x-[2px] hover:translate-y-[2px]")
       }
     >
-      ◉ {t("nav.ia")}
+      ◉ <span className="hidden sm:inline">{t("ia.assistant")}</span>
+      <span className="sm:hidden">{t("ia.assistantShort")}</span>
     </button>
   );
 
