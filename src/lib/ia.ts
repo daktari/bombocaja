@@ -86,7 +86,9 @@ export function diffPatterns(before: string, after: string): PatternDiff {
 // Workers AI allocation for everyone before noon.
 
 export const IA_DAILY_LIMIT = 10;
-const QUOTA_KEY = "bombocaja.ia";
+// .v2: the key rotated after the 2026-07-31 outage drained everyone's
+// counter — rotating it grants amnesty to every affected browser
+const QUOTA_KEY = "bombocaja.ia.v2";
 
 function today(): string {
   return new Date().toISOString().slice(0, 10);
