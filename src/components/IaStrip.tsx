@@ -36,11 +36,20 @@ export default function IaStrip({ code, bpm, playing, volume, onApply }: Props) 
   const [left, setLeft] = useState(() => iaUsesLeft());
   const [diff, setDiff] = useState<PatternDiff | null>(null);
   const [prev, setPrev] = useState<{ code: string; bpm: number } | null>(null);
+  const [elapsed, setElapsed] = useState(0);
   const abortRef = useRef<AbortController | null>(null);
   const playingRef = useRef(playing);
   playingRef.current = playing;
 
   useEffect(() => () => abortRef.current?.abort(), []);
+
+  // a local model can take ~20s before the first token: show life meanwhile
+  useEffect(() => {
+    if (phase !== "streaming") return;
+    setElapsed(0);
+    const id = window.setInterval(() => setElapsed((s) => s + 1), 1000);
+    return () => window.clearInterval(id);
+  }, [phase]);
 
   const adjust = async () => {
     const wish = prompt.trim();
@@ -133,7 +142,7 @@ export default function IaStrip({ code, bpm, playing, volume, onApply }: Props) 
           className="px-4 py-1.5 text-xs font-bold uppercase tracking-widest border border-acid text-acid hover:bg-acid hover:text-black transition-all disabled:opacity-50"
         >
           {phase === "streaming" ? (
-            <span className="blink">{t("ia.generating")}</span>
+            <span className="blink">{t("ia.stripBusy")}</span>
           ) : (
             t("ia.adjust")
           )}
@@ -152,6 +161,12 @@ export default function IaStrip({ code, bpm, playing, volume, onApply }: Props) 
         </span>
       </div>
 
+      {phase === "streaming" && (
+        <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-mag">
+          <span className="w-1.5 h-1.5 bg-mag blink shadow-[0_0_6px_#ff3ea5]" />
+          {t("ia.stripBusy")} {elapsed}s
+        </div>
+      )}
       {phase === "streaming" && raw && (
         <pre className="px-3 py-2 bg-black/70 border border-mag/25 text-[11px] leading-relaxed text-mag/80 whitespace-pre-wrap break-words max-h-28 overflow-y-auto">
           {sanitizeIaCode(raw) || raw}
