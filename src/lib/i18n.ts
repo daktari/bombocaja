@@ -74,6 +74,7 @@ const ES: Record<string, string> = {
   "ia.left": "{n} peticiones hoy",
   "ia.closed":
     "La residente ha cerrado la cabina por hoy — la cuota gratuita diaria se ha agotado. Vuelve mañana.",
+  "ia.limit": "Has gastado tus {n} peticiones de hoy — la cabina reabre mañana.",
   "ia.error": "La residente no le ha sacado un patrón válido a eso. Pídelo de otra forma.",
   "ia.note":
     "La cabina es lo único de bakaluti que habla con un servidor: tu petición viaja a la IA y no se guarda nada. El resto de la app vive solo en tu navegador.",
@@ -286,6 +287,7 @@ const EN: Record<string, string> = {
   "ia.open": "▸ Open in editor",
   "ia.left": "{n} requests today",
   "ia.closed": "The resident closed the booth for today — the free daily quota ran out. Come back tomorrow.",
+  "ia.limit": "You've used your {n} requests for today — the booth reopens tomorrow.",
   "ia.error": "The resident couldn't turn that into a valid pattern. Try asking differently.",
   "ia.note":
     "The booth is the only part of bakaluti that talks to a server: your request goes to the AI and nothing is stored. The rest of the app lives only in your browser.",

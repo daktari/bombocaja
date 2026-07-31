@@ -4,7 +4,9 @@ import { audioEngine } from "../lib/audioEngine";
 import {
   diffPatterns,
   extractBpm,
+  IA_DAILY_LIMIT,
   iaConsumeUse,
+  iaRefundUses,
   iaUsesLeft,
   sanitizeIaCode,
   streamGeneration,
@@ -12,7 +14,7 @@ import {
 } from "../lib/ia";
 import { t } from "../lib/i18n";
 
-type Phase = "idle" | "streaming" | "closed" | "error";
+type Phase = "idle" | "streaming" | "closed" | "limit" | "error";
 
 interface Props {
   code: string;
@@ -55,11 +57,12 @@ export default function IaStrip({ code, bpm, playing, volume, onApply }: Props) 
     const wish = prompt.trim();
     if (!wish || phase === "streaming" || !code.trim()) return;
     if (iaUsesLeft() <= 0) {
-      setPhase("closed");
+      setPhase("limit");
       return;
     }
     const base = code;
     const baseBpm = bpm;
+    let consumed = 1;
     iaConsumeUse();
     setLeft(iaUsesLeft());
     setPhase("streaming");
@@ -78,6 +81,7 @@ export default function IaStrip({ code, bpm, playing, volume, onApply }: Props) 
           parsed.warnings.length > 0
             ? parsed.warnings
             : ["todas las líneas son solo silencios (~): no suena nada — pon sonidos y notas"];
+        consumed += 1;
         iaConsumeUse();
         setLeft(iaUsesLeft());
         text = await streamGeneration(wish, setRaw, {
@@ -89,6 +93,8 @@ export default function IaStrip({ code, bpm, playing, volume, onApply }: Props) 
         parsed = parsePattern(final);
       }
       if (parsed.lanes.length === 0) {
+        iaRefundUses(consumed); // a failure must not eat the wallet
+        setLeft(iaUsesLeft());
         setPhase("error");
         return;
       }
@@ -109,6 +115,8 @@ export default function IaStrip({ code, bpm, playing, volume, onApply }: Props) 
       setPhase("idle");
     } catch (err) {
       if (controller.signal.aborted) return;
+      iaRefundUses(consumed); // a failure must not eat the wallet
+      setLeft(iaUsesLeft());
       setPhase(err instanceof Error && err.message === "cerrado" ? "closed" : "error");
     }
   };
@@ -174,6 +182,9 @@ export default function IaStrip({ code, bpm, playing, volume, onApply }: Props) 
         </pre>
       )}
       {phase === "closed" && <p className="text-[11px] text-mag">{t("ia.closed")}</p>}
+      {phase === "limit" && (
+        <p className="text-[11px] text-mag">{t("ia.limit", { n: IA_DAILY_LIMIT })}</p>
+      )}
       {phase === "error" && <p className="text-[11px] text-red-400">{t("ia.error")}</p>}
 
       {diff && (diff.added.length > 0 || diff.changed.length > 0 || diff.removed.length > 0) && (
