@@ -184,9 +184,26 @@ peticiones («añádele más groove»), con historial de checkpoints, knobs de
 mood, diff de cada ajuste y sesiones compartibles por URL. En el Editor, el
 botón **◉ asistente IA** aplica lo mismo sobre cualquier patrón cargado.
 Corre en Workers AI dentro de la capa gratuita; en desarrollo apunta a un
-LM Studio local.
+modelo local tuyo.
 
 ![La cabina de peticiones de la residente, con el hilo de la sesión y los knobs de mood](docs/residente.png)
+
+### IA en local
+
+En desarrollo no hay Workers AI: la cabina llama a un servidor **compatible
+con la API de OpenAI** en el puerto **1234** de tu máquina (vía el proxy
+`/llm` del dev server, así que sin líos de CORS).
+
+- **LM Studio** (lo más fácil): descarga un modelo — recomendado uno tipo
+  *coder*, p. ej. Qwen Coder de 7B para iterar rápido — y en la pestaña del
+  servidor dale a **Start Server** (el puerto 1234 es el de serie). La app
+  detecta sola qué modelo tienes cargado.
+- **Ollama u otro servidor**: también valen (API OpenAI-compatible), pero
+  sirven en otro puerto — cambia el `target` del proxy `/llm` en
+  [`vite.config.ts`](vite.config.ts) (p. ej. `http://host.docker.internal:11434`
+  para Ollama).
+- **Sin modelo local no pasa nada**: el resto de la app funciona igual;
+  solo las funciones de IA responderán con error.
 
 ## Aprender, guardar y compartir
 
