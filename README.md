@@ -1,5 +1,7 @@
 # bakaluti 🥁
 
+**En producción → [bakaluti.com](https://bakaluti.com)**
+
 Antes «bombocaja». Un mini-playground web para aprender a hacer ritmos escribiendo texto.
 Inspirado en Strudel / TidalCycles, pero radicalmente simplificado para
 gente sin ningún conocimiento musical.
@@ -169,6 +171,17 @@ temas evolucionan por dentro (entran capas, se despiden al final) y el botón
 generado la vigilan un linter musical (10.000 temas validados en los tests)
 y revisiones a ciegas de un agente crítico independiente.
 
+## La residente: pídele un ritmo 🎧
+
+Pestaña **Residente**: la DJ residente de la casa. Le pides en lenguaje
+natural («un techno berlinés duro y seco», «algo para estudiar») y el patrón
+se escribe solo en pantalla, sonando según aparece. Luego se vibe-codea a
+peticiones («añádele más groove»), con historial de checkpoints, knobs de
+mood, diff de cada ajuste y sesiones compartibles por URL. En el Editor, el
+botón **◉ asistente IA** aplica lo mismo sobre cualquier patrón cargado.
+Corre en Workers AI dentro de la capa gratuita; en desarrollo apunta a un
+LM Studio local.
+
 ## Aprender, guardar y compartir
 
 - **Learn**: curso de 10 lecciones progresivas (de "tu primer ritmo" a melodía
@@ -201,12 +214,13 @@ Cursor o cualquier modelo como contexto y generará patrones válidos.
   librerías comunitarias del ecosistema [TidalCycles](https://tidalcycles.org).
 - Inspirada en [Strudel](https://strudel.cc) y TidalCycles, referentes del
   live coding. La mini-notación es compatible con la suya a propósito.
-- **Privacidad**: sin cuentas, ni cookies, ni servidores. Ritmos, progreso y
-  grabaciones de voz viven solo en tu navegador.
+- **Privacidad**: sin cuentas ni cookies. Ritmos, progreso y grabaciones de
+  voz viven solo en tu navegador. La única llamada a servidor de toda la app
+  es la petición a la IA de la pestaña Residente, y no se guarda nada.
 - Código bajo licencia [AGPL-3.0](LICENSE).
 
-## Limitaciones del POC
+## Limitaciones
 
 - Los ritmos se guardan en localStorage (solo en este navegador).
 - Los sonidos que no sean bd/sn/hh necesitan internet la primera vez.
-- No hay export a audio ni MIDI.
+- Export a WAV sí; a MIDI no (de momento).
