@@ -74,9 +74,12 @@ async function generar(request: Request, env: Env): Promise<Response> {
         "cache-control": "no-store",
       },
     });
-  } catch {
-    // most likely the free daily allocation ran out — fail closed, never bill
-    return json({ error: "cerrado" }, 503);
+  } catch (err) {
+    // fail closed, never bill — but say WHY, so a missing binding or a bad
+    // model id can't masquerade as an exhausted quota
+    const detail = err instanceof Error ? err.message : String(err);
+    console.error("workers-ai:", detail);
+    return json({ error: "cerrado", detail }, 503);
   }
 }
 
