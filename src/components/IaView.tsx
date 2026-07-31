@@ -1,17 +1,23 @@
-import { useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { usePlayer } from "../lib/usePlayer";
 import { parsePattern } from "../lib/parser";
-import { DEFAULT_BPM } from "../lib/audioEngine";
+import { audioEngine, DEFAULT_BPM } from "../lib/audioEngine";
+import { addPattern } from "../lib/storage";
+import { sessionUrl, type SessionStep } from "../lib/share";
 import {
+  diffPatterns,
   extractBpm,
   iaConsumeUse,
   iaUsesLeft,
   playableSlice,
   sanitizeIaCode,
   streamGeneration,
+  type PatternDiff,
 } from "../lib/ia";
 import Visualizer from "./Visualizer";
-import { t } from "../lib/i18n";
+import { getLang, t } from "../lib/i18n";
+
+const CodeEditor = lazy(() => import("./CodeEditor"));
 
 type Phase = "idle" | "streaming" | "done" | "closed" | "error";
 
@@ -40,37 +46,134 @@ const ADJUST_EXAMPLES = [
   "métele acid",
 ];
 
+/** Mood knobs: each composes a piece of the wish. Negative pulls left. */
+const MOODS = [
+  { key: "dark", left: "ia.moodBright", right: "ia.moodDark" },
+  { key: "dense", left: "ia.moodAiry", right: "ia.moodDense" },
+  { key: "broken", left: "ia.moodStraight", right: "ia.moodBroken" },
+  { key: "fast", left: "ia.moodSlow", right: "ia.moodFast" },
+] as const;
+
+interface SpeechRecognitionLike {
+  lang: string;
+  interimResults: boolean;
+  onresult: ((event: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null;
+  onend: (() => void) | null;
+  start(): void;
+  stop(): void;
+}
+
+const SpeechRecognitionCtor =
+  typeof window !== "undefined"
+    ? ((window as unknown as { SpeechRecognition?: new () => SpeechRecognitionLike })
+        .SpeechRecognition ??
+      (window as unknown as { webkitSpeechRecognition?: new () => SpeechRecognitionLike })
+        .webkitSpeechRecognition ??
+      null)
+    : null;
+
+interface Props {
+  onOpen: (code: string, bpm?: number) => void;
+  /** a track sent over from the radio to be remixed */
+  seed?: { code: string; bpm: number; title: string } | null;
+  onSeedConsumed?: () => void;
+  /** a shared session (#s=…) to replay */
+  session?: SessionStep[] | null;
+}
+
 /**
  * The IA tab: natural language in, a playing pattern out. Tokens stream
  * straight into view (the pattern types itself) and playback starts as soon
- * as the first line parses — latency becomes performance, not waiting.
+ * as the first line parses. Adjusts crossfade in like a DJ mixing the next
+ * record — with vinyl crackle while the machine digs in the crates.
  */
-export default function IaView({ onOpen }: { onOpen: (code: string, bpm?: number) => void }) {
+export default function IaView({ onOpen, seed, onSeedConsumed, session }: Props) {
+  const initialSteps: Step[] = seed
+    ? [{ wish: t("ia.fromRadio", { title: seed.title }), mode: "new", code: seed.code, bpm: seed.bpm }]
+    : (session ?? []).map((s, i) => ({
+        wish: s.w,
+        mode: i === 0 ? "new" : "adjust",
+        code: s.c,
+        bpm: s.b,
+      }));
+  const lastStep = initialSteps[initialSteps.length - 1];
+
   const [prompt, setPrompt] = useState("");
   const [raw, setRaw] = useState("");
-  const [code, setCode] = useState("");
-  const [bpm, setBpm] = useState(DEFAULT_BPM);
-  const [phase, setPhase] = useState<Phase>("idle");
+  const [code, setCode] = useState(lastStep?.code ?? "");
+  const [bpm, setBpm] = useState(lastStep?.bpm ?? DEFAULT_BPM);
+  const [phase, setPhase] = useState<Phase>(lastStep ? "done" : "idle");
   const [left, setLeft] = useState(() => iaUsesLeft());
-  const [history, setHistory] = useState<Step[]>([]);
+  const [history, setHistory] = useState<Step[]>(initialSteps);
   const [pending, setPending] = useState<Step | null>(null);
+  const [diff, setDiff] = useState<PatternDiff | null>(null);
+  const [moods, setMoods] = useState<number[]>([0, 0, 0, 0]);
+  const [listening, setListening] = useState(false);
+  const [saveOpen, setSaveOpen] = useState(false);
+  const [saveName, setSaveName] = useState("");
+  const [notice, setNotice] = useState<string | null>(null);
+
   const startedRef = useRef(false);
   const abortRef = useRef<AbortController | null>(null);
+  const modeRef = useRef<"new" | "adjust">("new");
+  const playingRef = useRef(false);
+  const recRef = useRef<SpeechRecognitionLike | null>(null);
 
-  const { playing, play, stop } = usePlayer(code, { bpm });
+  const flashFn = useRef<((from: number, to: number) => void) | null>(null);
+  const registerFlash = useCallback((fn: (from: number, to: number) => void) => {
+    flashFn.current = fn;
+  }, []);
 
-  // leaving the tab stops both the stream and the sound
+  const { playing, play, stop } = usePlayer(code, {
+    bpm,
+    onFlash: (from, to) => flashFn.current?.(from, to),
+  });
+  playingRef.current = playing;
+
+  // a radio seed arrives already playing in spirit — keep the music going
+  useEffect(() => {
+    if (seed) {
+      onSeedConsumed?.();
+      play();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // leaving the tab stops the stream, the sound and the crackle
   useEffect(
     () => () => {
       abortRef.current?.abort();
+      recRef.current?.stop();
+      audioEngine.setCrackle(false);
+      audioEngine.setVolume(0.9);
       stop();
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     []
   );
 
+  const flash = (message: string) => {
+    setNotice(message);
+    window.setTimeout(() => setNotice((current) => (current === message ? null : current)), 2200);
+  };
+
+  /** Adjusts swap like a DJ: duck, switch on the fly, come back up. */
+  const swapCode = (next: string, dj: boolean) => {
+    if (dj && playingRef.current) {
+      audioEngine.fadeTo(0.12, 0.5);
+      window.setTimeout(() => {
+        setCode(next);
+        audioEngine.fadeTo(0.9, 1.4);
+      }, 520);
+    } else {
+      setCode(next);
+    }
+  };
+
   const applyText = (accumulated: string) => {
     setRaw(accumulated);
+    // adjusts keep the old record spinning until the new one is complete
+    if (modeRef.current === "adjust") return;
     const playable = playableSlice(accumulated);
     if (playable === "") return;
     const { lanes, warnings } = parsePattern(playable);
@@ -84,8 +187,8 @@ export default function IaView({ onOpen }: { onOpen: (code: string, bpm?: number
     }
   };
 
-  const generate = async (mode: "new" | "adjust" = "new") => {
-    const wish = prompt.trim();
+  const generate = async (mode: "new" | "adjust", wishOverride?: string) => {
+    const wish = (wishOverride ?? prompt).trim();
     if (!wish || phase === "streaming") return;
     if (iaUsesLeft() <= 0) {
       setPhase("closed");
@@ -93,17 +196,21 @@ export default function IaView({ onOpen }: { onOpen: (code: string, bpm?: number
     }
     // vibe-coding: the current pattern travels along and gets rewritten
     const base = mode === "adjust" && code ? code : undefined;
+    const effectiveMode = base ? mode : "new";
+    modeRef.current = effectiveMode;
     iaConsumeUse();
     setLeft(iaUsesLeft());
     setPhase("streaming");
-    setPending({ wish, mode, code: "", bpm });
+    setPending({ wish, mode: effectiveMode, code: "", bpm });
     setPrompt(""); // the request moves into the session stack
+    setDiff(null);
     setRaw("");
-    setCode("");
+    if (!base) setCode("");
     startedRef.current = false;
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
+    audioEngine.setCrackle(true);
 
     try {
       let text = await streamGeneration(wish, applyText, {
@@ -130,28 +237,34 @@ export default function IaView({ onOpen }: { onOpen: (code: string, bpm?: number
         parsed = parsePattern(final);
       }
 
+      audioEngine.setCrackle(false);
       if (parsed.lanes.length === 0) {
-        if (base) setCode(base); // a failed adjust must not eat the pattern
         setPending(null);
         setPrompt(wish); // give the request back for another try
         setPhase("error");
         return;
       }
       const announced = extractBpm(final);
-      setCode(final);
       if (announced) setBpm(announced);
-      if (!startedRef.current) {
+      if (base) setDiff(diffPatterns(base, final));
+      swapCode(final, effectiveMode === "adjust");
+      if (!startedRef.current && !playingRef.current) {
         startedRef.current = true;
         play();
       }
       setPending(null);
       setHistory((steps) =>
-        (mode === "new" ? [] : steps).concat({ wish, mode, code: final, bpm: announced ?? bpm })
+        (effectiveMode === "new" ? [] : steps).concat({
+          wish,
+          mode: effectiveMode,
+          code: final,
+          bpm: announced ?? bpm,
+        })
       );
       setPhase("done");
     } catch (err) {
       if (controller.signal.aborted) return;
-      if (base) setCode(base); // a failed adjust must not eat the pattern
+      audioEngine.setCrackle(false);
       setPending(null);
       setPrompt(wish); // give the request back for another try
       setPhase(err instanceof Error && err.message === "cerrado" ? "closed" : "error");
@@ -165,10 +278,59 @@ export default function IaView({ onOpen }: { onOpen: (code: string, bpm?: number
     setCode(step.code);
     setBpm(step.bpm);
     setHistory(history.slice(0, index + 1));
+    setDiff(null);
     setPhase("done");
   };
 
-  const display = phase === "streaming" ? sanitizeIaCode(raw) || raw : code;
+  /** Turn the mood knobs into words and send them to the crates. */
+  const applyMoods = () => {
+    const pieces = MOODS.map((mood, i) => {
+      const value = moods[i];
+      if (value === 0) return null;
+      const what = t(value > 0 ? mood.right : mood.left);
+      return t(Math.abs(value) === 2 ? "ia.moodMuchMore" : "ia.moodBitMore", { what });
+    }).filter(Boolean) as string[];
+    if (pieces.length === 0) return;
+    setMoods([0, 0, 0, 0]);
+    void generate("adjust", pieces.join(", "));
+  };
+
+  const toggleVoice = () => {
+    if (!SpeechRecognitionCtor) return;
+    if (listening) {
+      recRef.current?.stop();
+      return;
+    }
+    const rec = new SpeechRecognitionCtor();
+    rec.lang = getLang() === "es" ? "es-ES" : "en-US";
+    rec.interimResults = true;
+    rec.onresult = (event) => {
+      const transcript = Array.from({ length: event.results.length }, (_, i) =>
+        event.results[i][0].transcript
+      ).join(" ");
+      setPrompt(transcript.trim());
+    };
+    rec.onend = () => setListening(false);
+    recRef.current = rec;
+    setListening(true);
+    rec.start();
+  };
+
+  const confirmSave = () => {
+    addPattern(saveName.trim() || t("ed.defaultName"), code, bpm);
+    setSaveOpen(false);
+    setSaveName("");
+    flash(t("ed.saved"));
+  };
+
+  const shareSession = async () => {
+    await navigator.clipboard.writeText(
+      sessionUrl(history.map((s) => ({ w: s.wish, c: s.code, b: s.bpm })))
+    );
+    flash(t("ia.sessionCopied"));
+  };
+
+  const streamingText = sanitizeIaCode(raw) || raw;
 
   return (
     <div className="flex-1 overflow-y-auto p-5 md:p-7 relative min-w-0">
@@ -186,8 +348,22 @@ export default function IaView({ onOpen }: { onOpen: (code: string, bpm?: number
             }}
             maxLength={280}
             placeholder={code ? t("ia.adjustPlaceholder") : t("ia.placeholder")}
-            className="flex-1 px-3 py-2.5 text-sm bg-black border border-acid/40 outline-none text-acid placeholder-fog focus:border-acid transition-all"
+            className="flex-1 min-w-0 px-3 py-2.5 text-sm bg-black border border-acid/40 outline-none text-acid placeholder-fog focus:border-acid transition-all"
           />
+          {SpeechRecognitionCtor && (
+            <button
+              onClick={toggleVoice}
+              title={t("ia.voice")}
+              className={
+                "px-3 py-2.5 text-xs uppercase tracking-widest border transition-all " +
+                (listening
+                  ? "border-red-500 text-red-400"
+                  : "border-white/20 text-fog hover:text-acid hover:border-acid/60")
+              }
+            >
+              {listening ? <span className="blink">● {t("ia.listening")}</span> : `● ${t("ia.voice")}`}
+            </button>
+          )}
           {code && (
             <button
               onClick={() => void generate("adjust")}
@@ -236,6 +412,37 @@ export default function IaView({ onOpen }: { onOpen: (code: string, bpm?: number
           </span>
         </div>
 
+        {code && phase !== "streaming" && (
+          <div className="mt-4 flex items-end gap-4 flex-wrap border border-white/10 bg-panel px-3 py-2.5">
+            {MOODS.map((mood, i) => (
+              <label key={mood.key} className="flex flex-col text-[9px] uppercase tracking-widest text-fog select-none">
+                <input
+                  type="range"
+                  min={-2}
+                  max={2}
+                  step={1}
+                  value={moods[i]}
+                  onChange={(e) =>
+                    setMoods(moods.map((v, j) => (j === i ? Number(e.target.value) : v)))
+                  }
+                  className="w-24 accent-acid"
+                />
+                <span className="flex justify-between w-24 mt-0.5">
+                  <span className={moods[i] < 0 ? "text-acid" : ""}>{t(mood.left)}</span>
+                  <span className={moods[i] > 0 ? "text-acid" : ""}>{t(mood.right)}</span>
+                </span>
+              </label>
+            ))}
+            <button
+              onClick={applyMoods}
+              disabled={moods.every((v) => v === 0)}
+              className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest border border-acid/60 text-acid hover:bg-acid hover:text-black transition-all disabled:opacity-40"
+            >
+              {t("ia.moodApply")}
+            </button>
+          </div>
+        )}
+
         {(history.length > 0 || pending) && (
           <div className="mt-5 space-y-1 text-[11px]">
             {history.map((step, i) => (
@@ -278,11 +485,55 @@ export default function IaView({ onOpen }: { onOpen: (code: string, bpm?: number
           </p>
         )}
 
-        {display && (
-          <pre className="mt-5 px-4 py-3 bg-black/70 border border-acid/25 text-[13px] leading-relaxed text-acid whitespace-pre-wrap break-words min-h-[8rem]">
-            {display}
-            {phase === "streaming" && <span className="blink">▮</span>}
+        {phase === "streaming" && modeRef.current === "adjust" && streamingText && (
+          <pre className="mt-5 px-4 py-3 bg-black/70 border border-mag/25 text-[13px] leading-relaxed text-mag/80 whitespace-pre-wrap break-words">
+            {streamingText}
+            <span className="blink">▮</span>
           </pre>
+        )}
+
+        {phase === "streaming" && modeRef.current === "new" && (
+          <pre className="mt-5 px-4 py-3 bg-black/70 border border-acid/25 text-[13px] leading-relaxed text-acid whitespace-pre-wrap break-words min-h-[8rem]">
+            {streamingText}
+            <span className="blink">▮</span>
+          </pre>
+        )}
+
+        {code && phase !== "streaming" && (
+          <div className="mt-5 h-52 bg-black border border-acid/25 overflow-hidden">
+            <Suspense
+              fallback={
+                <pre className="px-4 py-3 text-[13px] leading-relaxed text-acid whitespace-pre-wrap">
+                  {code}
+                </pre>
+              }
+            >
+              <CodeEditor
+                value={code}
+                onChange={() => {}}
+                readOnly
+                registerFlash={registerFlash}
+                className="h-full"
+              />
+            </Suspense>
+          </div>
+        )}
+
+        {diff && (diff.added.length > 0 || diff.changed.length > 0 || diff.removed.length > 0) && (
+          <div className="mt-3 border border-white/10 bg-panel px-3 py-2.5 text-[11px] leading-relaxed">
+            <div className="text-[9px] uppercase tracking-[0.2em] text-fog mb-1.5">
+              {t("ia.diff")}
+            </div>
+            {diff.added.map((line) => (
+              <div key={`a-${line}`} className="text-acid">＋ {line}</div>
+            ))}
+            {diff.changed.map((line) => (
+              <div key={`c-${line}`} className="text-mag">± {line}</div>
+            ))}
+            {diff.removed.map((line) => (
+              <div key={`r-${line}`} className="text-fog/60 line-through">− {line}</div>
+            ))}
+          </div>
         )}
 
         {code && (
@@ -301,6 +552,42 @@ export default function IaView({ onOpen }: { onOpen: (code: string, bpm?: number
             <span className="px-2.5 py-1 border border-acid/40 text-[10px] uppercase tracking-widest led">
               {bpm} bpm
             </span>
+            {saveOpen ? (
+              <span className="flex items-center gap-1">
+                <input
+                  autoFocus
+                  value={saveName}
+                  onChange={(e) => setSaveName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") confirmSave();
+                    if (e.key === "Escape") setSaveOpen(false);
+                  }}
+                  placeholder={t("ed.savePlaceholder")}
+                  className="w-36 px-2 py-1.5 text-xs bg-black border border-acid/40 outline-none text-acid placeholder-fog"
+                />
+                <button
+                  onClick={confirmSave}
+                  className="px-2 py-1.5 text-xs text-acid border border-acid/40 hover:bg-acid hover:text-black transition-all"
+                >
+                  ✓
+                </button>
+              </span>
+            ) : (
+              <button
+                onClick={() => setSaveOpen(true)}
+                className="px-3 py-2 text-xs uppercase tracking-widest text-slate-300 border border-white/15 hover:border-acid/60 hover:text-acid transition-all"
+              >
+                {t("ed.save")}
+              </button>
+            )}
+            {history.length > 0 && (
+              <button
+                onClick={() => void shareSession()}
+                className="px-3 py-2 text-xs uppercase tracking-widest text-slate-300 border border-white/15 hover:border-acid/60 hover:text-acid transition-all"
+              >
+                {t("ia.session")}
+              </button>
+            )}
             <button
               onClick={() => onOpen(code, bpm)}
               className="ml-auto px-5 py-2 text-xs font-bold uppercase tracking-widest border border-mag text-mag hover:bg-mag hover:text-black transition-all"
@@ -309,6 +596,7 @@ export default function IaView({ onOpen }: { onOpen: (code: string, bpm?: number
             </button>
           </div>
         )}
+        {notice && <p className="mt-2 text-[10px] text-acid">{notice}</p>}
 
         <p className="mt-6 text-[10px] text-fog/70 leading-relaxed max-w-md">{t("ia.note")}</p>
       </div>

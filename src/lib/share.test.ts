@@ -5,6 +5,8 @@ import {
   momentFromHash,
   momentUrl,
   patternUrl,
+  sessionFromHash,
+  sessionUrl,
   sharedFromHash,
 } from "./share";
 
@@ -44,6 +46,24 @@ describe("pattern sharing", () => {
   it("returns null when there is no shared pattern", () => {
     globalThis.location.hash = "";
     expect(sharedFromHash()).toBeNull();
+  });
+});
+
+describe("IA sessions", () => {
+  it("round-trips a whole lineage through the url hash", () => {
+    const steps = [
+      { w: "un techno berlinés", c: "-- bpm 138\nbd bd bd bd | drive 0.6", b: 138 },
+      { w: "añádele más groove", c: "-- bpm 138\nbd bd bd bd | drive 0.6 | swing 0.3", b: 138 },
+    ];
+    const url = sessionUrl(steps);
+    const hash = url.slice(url.indexOf("#"));
+    expect(sessionFromHash(hash)).toEqual(steps);
+  });
+
+  it("rejects garbage and empty sessions", () => {
+    expect(sessionFromHash("#s=%%%%")).toBeNull();
+    expect(sessionFromHash(`#s=${encodePattern("[]")}`)).toBeNull();
+    expect(sessionFromHash(`#s=${encodePattern('{"not":"array"}')}`)).toBeNull();
   });
 });
 

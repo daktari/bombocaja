@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { extractBpm, playableSlice, sanitizeIaCode } from "./ia";
+import { diffPatterns, extractBpm, playableSlice, sanitizeIaCode } from "./ia";
 
 describe("IA output sanitizer", () => {
   it("keeps a clean pattern untouched", () => {
@@ -27,6 +27,16 @@ describe("IA output sanitizer", () => {
   it("playableSlice drops the half-written last line while streaming", () => {
     const streamed = "-- bpm 124\nbd bd bd bd -- bombo\n~ cp ~ c";
     expect(playableSlice(streamed)).toBe("-- bpm 124\nbd bd bd bd -- bombo");
+  });
+
+  it("diffs an adjust: added, retouched and removed lines", () => {
+    const before = "-- bpm 126\nbd bd bd bd | gain 0.9\n~ cp ~ cp | reverb 0.3\n7 ~ 9 ~ | synth piano";
+    const after =
+      "-- bpm 126\nbd bd bd bd | gain 0.9\n~ cp ~ cp | reverb 0.3 | swing 0.3\n~ ho ~ ho | swing 0.3";
+    const diff = diffPatterns(before, after);
+    expect(diff.added).toEqual(["~ ho ~ ho | swing 0.3"]);
+    expect(diff.changed).toEqual(["~ cp ~ cp | reverb 0.3 | swing 0.3"]);
+    expect(diff.removed).toEqual(["7 ~ 9 ~ | synth piano"]);
   });
 
   it("extracts and clamps the announced bpm", () => {

@@ -34,6 +34,41 @@ export function sharedFromHash(): SharedPattern | null {
   return { code, bpm: match[2] ? parseInt(match[2], 10) : undefined };
 }
 
+// ---------------------------------------------------------------- IA sessions
+// A vibe-coding session is a lineage: each wish and the pattern it produced.
+// Encoded whole in the URL, so a friend can replay how you got there.
+
+export interface SessionStep {
+  /** the wish */
+  w: string;
+  /** the pattern it produced */
+  c: string;
+  /** its tempo */
+  b: number;
+}
+
+export function sessionUrl(steps: SessionStep[]): string {
+  return `${location.origin}${location.pathname}#s=${encodePattern(JSON.stringify(steps.slice(-8)))}`;
+}
+
+/** IA session shared in the current URL, if any. */
+export function sessionFromHash(hash?: string): SessionStep[] | null {
+  const match = (hash ?? location.hash).match(/^#s=([^&]+)/);
+  if (!match) return null;
+  const decoded = decodePattern(match[1]);
+  if (decoded === null) return null;
+  try {
+    const steps = JSON.parse(decoded) as SessionStep[];
+    if (!Array.isArray(steps)) return null;
+    const valid = steps.filter(
+      (s) => s && typeof s.w === "string" && typeof s.c === "string" && typeof s.b === "number"
+    );
+    return valid.length > 0 ? valid : null;
+  } catch {
+    return null;
+  }
+}
+
 // ---------------------------------------------------------------- FM moments
 // The broadcast is a pure function of the clock, so a dial + a unix second
 // IS a recording: the link replays exactly what was on air at that moment.

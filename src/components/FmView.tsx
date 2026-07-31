@@ -13,6 +13,8 @@ const mmss = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).
 
 interface Props {
   onRemix: (code: string, bpm?: number) => void;
+  /** send what's on air to the IA tab as a remix base */
+  onIaRemix?: (code: string, bpm: number, title: string) => void;
   /** an #fm=…&t=… link: open in replay mode at that historical moment */
   moment?: SharedMoment | null;
   onClearMoment?: () => void;
@@ -26,7 +28,7 @@ interface Props {
  * is the only input, a shared moment link (dial + unix second) replays
  * the past broadcast exactly — time travel without a single recording.
  */
-export default function FmView({ onRemix, moment, onClearMoment }: Props) {
+export default function FmView({ onRemix, onIaRemix, moment, onClearMoment }: Props) {
   const [dial, setDial] = useState<Dial>(moment?.dial ?? "fm");
   const [tuned, setTuned] = useState(false);
   const [vol, setVol] = useState(0.9);
@@ -315,6 +317,14 @@ export default function FmView({ onRemix, moment, onClearMoment }: Props) {
             >
               {t("fm.remix")}
             </button>
+            {onIaRemix && (
+              <button
+                onClick={() => onIaRemix(air.track.code, air.track.bpm, air.track.title)}
+                className="px-4 py-2 text-xs uppercase tracking-widest border border-acid/50 text-acid hover:bg-acid hover:text-black transition-all"
+              >
+                {t("fm.iaRemix")}
+              </button>
+            )}
           </div>
           {notice && <p className="mt-2 text-[10px] text-acid">{notice}</p>}
 

@@ -46,6 +46,41 @@ export function extractBpm(code: string): number | undefined {
   return Math.min(MAX_BPM, Math.max(MIN_BPM, parseInt(match[1], 10)));
 }
 
+// ------------------------------------------------------------------- diff
+
+export interface PatternDiff {
+  added: string[];
+  changed: string[];
+  removed: string[];
+}
+
+/** What did the adjust touch? Lines keyed by their pattern part (before
+ *  the first |): same key + different fx = retouched; new key = added. */
+export function diffPatterns(before: string, after: string): PatternDiff {
+  const clean = (codeText: string) =>
+    codeText
+      .split("\n")
+      .map((line) => line.trim())
+      .filter((line) => line !== "" && !line.startsWith("--"));
+  const key = (line: string) => line.split("|")[0].trim();
+  const oldLines = clean(before);
+  const newLines = clean(after);
+  const oldExact = new Set(oldLines);
+  const newExact = new Set(newLines);
+  const oldKeys = new Set(oldLines.map(key));
+  const newKeys = new Set(newLines.map(key));
+
+  const added: string[] = [];
+  const changed: string[] = [];
+  for (const line of newLines) {
+    if (oldExact.has(line)) continue;
+    if (oldKeys.has(key(line))) changed.push(line);
+    else added.push(line);
+  }
+  const removed = oldLines.filter((line) => !newExact.has(line) && !newKeys.has(key(line)));
+  return { added, changed, removed };
+}
+
 // ------------------------------------------------------------- daily quota
 // Client-side courtesy limit so one enthusiast doesn't drain the free
 // Workers AI allocation for everyone before noon.
