@@ -2,9 +2,14 @@
   // Cloudflare Workers static assets — deployed with `npx wrangler deploy`
   "name": "bakaluti",
   "compatibility_date": "2025-01-01",
+  "main": "./worker/index.ts",
   "assets": {
     "directory": "./dist",
+    "binding": "ASSETS",
     // deep links (/#p=… works anyway, but any path falls back to the app)
     "not_found_handling": "single-page-application"
+  },
+  "ai": {
+    "binding": "AI"
   }
 }

@@ -4,6 +4,7 @@ import EditorView, { DEFAULT_CODE } from "./components/EditorView";
 import LearnView from "./components/LearnView";
 import LibraryView from "./components/LibraryView";
 import FmView from "./components/FmView";
+import IaView from "./components/IaView";
 import { momentFromHash, sharedFromHash } from "./lib/share";
 import { DEFAULT_BPM } from "./lib/audioEngine";
 import { HERO_CODE } from "./lib/gallery";
@@ -50,6 +51,7 @@ export default function App() {
         {tab === "fm" && (
           <FmView onRemix={openInEditor} moment={moment} onClearMoment={() => setMoment(null)} />
         )}
+        {tab === "ia" && <IaView onOpen={openInEditor} />}
         {tab === "learn" && <LearnView />}
         {tab === "library" && <LibraryView onLoad={openInEditor} />}
       </main>

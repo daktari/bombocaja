@@ -32,8 +32,22 @@ const ES: Record<string, string> = {
   "nav.tagline": "juega con sonido",
   "nav.editor": "Editor",
   "nav.fm": "FM",
+  "nav.ia": "IA",
   "nav.learn": "Aprende",
   "nav.library": "Archivo",
+
+  "ia.title": "Pídele un ritmo",
+  "ia.sub":
+    "Describe lo que quieres oír y la máquina lo escribe en el editor, línea a línea, sonando según aparece. Luego es tuyo: ábrelo y remézclalo.",
+  "ia.placeholder": "un techno berlinés, algo para estudiar, un ritmo que suene a lluvia…",
+  "ia.generate": "▸ Generar",
+  "ia.generating": "componiendo…",
+  "ia.open": "▸ Abrir en editor",
+  "ia.left": "{n} generaciones hoy",
+  "ia.closed": "La IA ha echado el cierre por hoy — la cuota gratuita diaria se ha agotado. Vuelve mañana.",
+  "ia.error": "No ha salido un patrón válido. Prueba a pedirlo de otra forma.",
+  "ia.note":
+    "Esta pestaña es lo único de bakaluti que habla con un servidor: tu petición viaja a la IA y no se guarda nada. El resto de la app sigue viviendo solo en tu navegador.",
 
   "grid.empty": "Escribe un patrón para ver los pasos…",
   "grid.laneVol": "volumen de esta línea",
@@ -201,8 +215,22 @@ const EN: Record<string, string> = {
   "nav.tagline": "play with sound",
   "nav.editor": "Editor",
   "nav.fm": "FM",
+  "nav.ia": "AI",
   "nav.learn": "Learn",
   "nav.library": "Library",
+
+  "ia.title": "Ask for a beat",
+  "ia.sub":
+    "Describe what you want to hear and the machine writes it into the editor, line by line, playing as it appears. Then it's yours: open it and remix it.",
+  "ia.placeholder": "berlin techno, something to study to, a beat that sounds like rain…",
+  "ia.generate": "▸ Generate",
+  "ia.generating": "composing…",
+  "ia.open": "▸ Open in editor",
+  "ia.left": "{n} generations today",
+  "ia.closed": "The AI has closed for today — the free daily quota ran out. Come back tomorrow.",
+  "ia.error": "That didn't produce a valid pattern. Try phrasing it differently.",
+  "ia.note":
+    "This tab is the only part of bakaluti that talks to a server: your request goes to the AI and nothing is stored. The rest of the app still lives only in your browser.",
 
   "grid.empty": "Write a pattern to see the steps…",
   "grid.laneVol": "this line's volume",
