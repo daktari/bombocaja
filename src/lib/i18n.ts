@@ -6,7 +6,7 @@
 
 export type Lang = "es" | "en";
 
-const LANG_KEY = "bombocaja.lang";
+const LANG_KEY = "bakaluti.lang";
 
 export function getLang(): Lang {
   if (typeof localStorage === "undefined") return "es";

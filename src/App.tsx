@@ -9,8 +9,7 @@ import { momentFromHash, sessionFromHash, sharedFromHash } from "./lib/share";
 import { DEFAULT_BPM } from "./lib/audioEngine";
 import { HERO_CODE } from "./lib/gallery";
 
-// "bombocaja.*" are legacy internal keys — kept so existing users retain their data
-const VISITED_KEY = "bombocaja.visited";
+const VISITED_KEY = "bakaluti.visited";
 
 // A shared pattern in the URL (#p=…) opens directly in the editor, at its tempo.
 const SHARED = typeof location !== "undefined" ? sharedFromHash() : null;
