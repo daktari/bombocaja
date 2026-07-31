@@ -210,7 +210,9 @@ export default function IaView({ onOpen, seed, onSeedConsumed, session }: Props)
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
-    audioEngine.setCrackle(true);
+    // crackle only while digging from scratch — during an adjust the old
+    // record keeps spinning, and music beats surface noise
+    if (!base) audioEngine.setCrackle(true);
 
     try {
       let text = await streamGeneration(wish, applyText, {
