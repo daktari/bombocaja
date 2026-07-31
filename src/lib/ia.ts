@@ -108,6 +108,13 @@ export function iaConsumeUse(): void {
   localStorage.setItem(QUOTA_KEY, `${today()}:${used + 1}`);
 }
 
+/** Server failures must not eat the visitor's daily wallet. */
+export function iaRefundUses(count: number): void {
+  if (typeof localStorage === "undefined" || count <= 0) return;
+  const used = IA_DAILY_LIMIT - iaUsesLeft();
+  localStorage.setItem(QUOTA_KEY, `${today()}:${Math.max(0, used - count)}`);
+}
+
 // ---------------------------------------------------------------- streaming
 
 export interface FixPayload {

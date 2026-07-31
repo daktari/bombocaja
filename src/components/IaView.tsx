@@ -7,7 +7,9 @@ import { sessionUrl, type SessionStep } from "../lib/share";
 import {
   diffPatterns,
   extractBpm,
+  IA_DAILY_LIMIT,
   iaConsumeUse,
+  iaRefundUses,
   iaUsesLeft,
   playableSlice,
   sanitizeIaCode,
@@ -19,7 +21,7 @@ import { getLang, t } from "../lib/i18n";
 
 const CodeEditor = lazy(() => import("./CodeEditor"));
 
-type Phase = "idle" | "streaming" | "done" | "closed" | "error";
+type Phase = "idle" | "streaming" | "done" | "closed" | "limit" | "error";
 
 /** One request in the session: what was asked and the pattern it produced —
  *  a checkpoint you can jump back to. */
@@ -191,13 +193,14 @@ export default function IaView({ onOpen, seed, onSeedConsumed, session }: Props)
     const wish = (wishOverride ?? prompt).trim();
     if (!wish || phase === "streaming") return;
     if (iaUsesLeft() <= 0) {
-      setPhase("closed");
+      setPhase("limit");
       return;
     }
     // vibe-coding: the current pattern travels along and gets rewritten
     const base = mode === "adjust" && code ? code : undefined;
     const effectiveMode = base ? mode : "new";
     modeRef.current = effectiveMode;
+    let consumed = 1;
     iaConsumeUse();
     setLeft(iaUsesLeft());
     setPhase("streaming");
@@ -228,6 +231,7 @@ export default function IaView({ onOpen, seed, onSeedConsumed, session }: Props)
           parsed.warnings.length > 0
             ? parsed.warnings
             : ["todas las líneas son solo silencios (~): no suena nada — pon sonidos y notas"];
+        consumed += 1;
         iaConsumeUse();
         setLeft(iaUsesLeft());
         text = await streamGeneration(wish, applyText, {
@@ -241,6 +245,9 @@ export default function IaView({ onOpen, seed, onSeedConsumed, session }: Props)
 
       audioEngine.setCrackle(false);
       if (parsed.lanes.length === 0) {
+        if (base) setCode(base); // a failed adjust must not eat the pattern
+        iaRefundUses(consumed); // a failure must not eat the wallet either
+        setLeft(iaUsesLeft());
         setPending(null);
         setPrompt(wish); // give the request back for another try
         setPhase("error");
@@ -267,6 +274,8 @@ export default function IaView({ onOpen, seed, onSeedConsumed, session }: Props)
     } catch (err) {
       if (controller.signal.aborted) return;
       audioEngine.setCrackle(false);
+      iaRefundUses(consumed); // a failure must not eat the wallet
+      setLeft(iaUsesLeft());
       setPending(null);
       setPrompt(wish); // give the request back for another try
       setPhase(err instanceof Error && err.message === "cerrado" ? "closed" : "error");
@@ -504,6 +513,11 @@ export default function IaView({ onOpen, seed, onSeedConsumed, session }: Props)
 
         {phase === "closed" && (
           <p className="mt-5 px-3 py-2.5 border border-mag/50 text-mag text-xs">{t("ia.closed")}</p>
+        )}
+        {phase === "limit" && (
+          <p className="mt-5 px-3 py-2.5 border border-mag/50 text-mag text-xs">
+            {t("ia.limit", { n: IA_DAILY_LIMIT })}
+          </p>
         )}
         {phase === "error" && (
           <p className="mt-5 px-3 py-2.5 border border-red-500/50 text-red-400 text-xs">
