@@ -225,10 +225,13 @@ con la API de OpenAI** en el puerto **1234** de tu máquina (vía el proxy
 
 ## Para IAs (vibe coding)
 
-El lenguaje es inventado, así que los LLMs no lo conocen de serie. La
-especificación completa vive en [`/llms.txt`](public/llms.txt) — en
-producción: `https://bakaluti.com/llms.txt`. Pásasela a Claude Code,
-Cursor o cualquier modelo como contexto y generará patrones válidos.
+La mini-notación es **compatible a propósito con Strudel / TidalCycles**
+(`[a b]`, `<a b>`, `(3,8)`, `*2`, `?`…), que los LLMs sí conocen de serie.
+Lo que es dialecto propio de bakaluti — los trucos con `|`, los comandos en
+español, `kit`, `synth`, `scale`, la voz `v1…v8` — está en la especificación
+completa: [`/llms.txt`](public/llms.txt), en producción
+`https://bakaluti.com/llms.txt`. Pásasela a Claude Code, Cursor o cualquier
+modelo como contexto y generará patrones válidos a la primera.
 
 ## Créditos y licencia
 
