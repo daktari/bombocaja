@@ -153,6 +153,23 @@ export default function EditorView({ code, onCodeChange, bpm, onBpmChange }: Pro
     }
   };
 
+  // The IA button lives inside the transport group, styled like the hero
+  // actions — this feature deserves the spotlight.
+  const iaButton = (
+    <button
+      onClick={() => setIaOpen((open) => !open)}
+      title={t("ia.cratesTitle")}
+      className={
+        "px-4 py-1.5 text-xs font-bold uppercase tracking-widest transition-all " +
+        (iaOpen
+          ? "bg-mag text-black shadow-[0_0_14px_rgba(255,62,165,0.5)]"
+          : "bg-acid text-black shadow-[3px_3px_0_#ff3ea5] hover:shadow-[1px_1px_0_#ff3ea5] hover:translate-x-[2px] hover:translate-y-[2px]")
+      }
+    >
+      ◉ {t("nav.ia")}
+    </button>
+  );
+
   // Save / share / export controls, shared by the desktop toolbar and the
   // mobile "más controles" sheet (state is common, so both stay in sync).
   const actionControls = (
@@ -258,7 +275,9 @@ export default function EditorView({ code, onCodeChange, bpm, onBpmChange }: Pro
             onBpmChange={onBpmChange}
             volume={volume}
             onVolumeChange={setVolume}
-          />
+          >
+            {iaButton}
+          </Transport>
           <button
             onClick={toggleAuto}
             title={t("auto.title")}
@@ -281,18 +300,6 @@ export default function EditorView({ code, onCodeChange, bpm, onBpmChange }: Pro
               ↺ {autoTrail.length}
             </button>
           )}
-          <button
-            onClick={() => setIaOpen((open) => !open)}
-            title={t("ia.cratesTitle")}
-            className={
-              "px-4 py-1.5 text-xs font-bold uppercase tracking-widest border transition-all " +
-              (iaOpen
-                ? "bg-acid text-black border-acid"
-                : "border-acid/60 text-acid hover:bg-acid hover:text-black")
-            }
-          >
-            ◉ {t("ia.crates")}
-          </button>
           <div className="flex items-center gap-2 flex-wrap">
             {notice && <span className="text-[10px] text-acid">{notice}</span>}
             {actionControls}
@@ -304,7 +311,9 @@ export default function EditorView({ code, onCodeChange, bpm, onBpmChange }: Pro
 
         {/* Mobile toolbar: only the essentials; the rest lives behind "⋯". */}
         <div className="relative z-10 flex lg:hidden items-center gap-2 flex-wrap">
-          <Transport playing={playing} onPlay={play} onStop={stop} bpm={bpm} />
+          <Transport playing={playing} onPlay={play} onStop={stop} bpm={bpm}>
+            {iaButton}
+          </Transport>
           <button
             onClick={toggleAuto}
             title={t("auto.title")}
@@ -327,18 +336,6 @@ export default function EditorView({ code, onCodeChange, bpm, onBpmChange }: Pro
               ↺ {autoTrail.length}
             </button>
           )}
-          <button
-            onClick={() => setIaOpen((open) => !open)}
-            title={t("ia.cratesTitle")}
-            className={
-              "px-3 py-1.5 text-xs font-bold border transition-all " +
-              (iaOpen
-                ? "bg-acid text-black border-acid"
-                : "border-acid/60 text-acid hover:bg-acid hover:text-black")
-            }
-          >
-            ◉
-          </button>
           <button
             onClick={() => setMore((open) => !open)}
             title={t("ed.more")}

@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { DEFAULT_BPM, MIN_BPM, MAX_BPM } from "../lib/audioEngine";
 
 interface Props {
@@ -9,6 +10,8 @@ interface Props {
   onBpmChange?: (bpm: number) => void;
   volume?: number;
   onVolumeChange?: (volume: number) => void;
+  /** extra control rendered inside the transport group (after reset) */
+  children?: ReactNode;
 }
 
 export default function Transport({
@@ -20,6 +23,7 @@ export default function Transport({
   onBpmChange,
   volume,
   onVolumeChange,
+  children,
 }: Props) {
   return (
     <div className="flex items-center gap-2 flex-wrap">
@@ -48,6 +52,7 @@ export default function Transport({
           ↺ Reset
         </button>
       )}
+      {children}
 
       {onBpmChange ? (
         <label className="ml-2 flex items-center gap-2 px-3 py-1.5 bg-black border border-acid/30 text-xs select-none">
